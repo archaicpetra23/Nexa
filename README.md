@@ -2,13 +2,13 @@
 
 **Nexa** adalah aplikasi web rekam medis dan penagihan terintegrasi yang dirancang untuk mempercepat siklus operasional klaim BPJS Kesehatan di Rumah Sakit Umum Daerah (RSUD). Sistem ini menjembatani *data silos* antara loket pendaftaran, dokter DPJP, perawat bangsal, koder Casemix, dan bagian keuangan.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend:** Go 1.22+ (Gin Gonic, GORM), PostgreSQL 16
 - **Frontend:** Vue 3 (Composition API, Vite, PrimeVue, Tailwind CSS, Pinia)
 - **Arsitektur:** Decoupled Monorepo, RESTful API, JWT + RBAC
 
-## 📁 Struktur Dokumen
+## Struktur Dokumen
 
 | File | Deskripsi |
 | :--- | :--- |
@@ -17,14 +17,14 @@
 | [`docs/Nexa (PRD).pdf`](docs/Nexa%20(PRD).pdf) | PRD dalam format PDF |
 | [`docs/Nexa (PRD).docx`](docs/Nexa%20(PRD).docx) | PRD dalam format DOCX |
 
-## 🎯 Masalah yang Diselesaikan
+## Masalah yang Diselesaikan
 
 1. **Pencatatan Terfragmentasi** — alur data manual antar-unit memicu inkonsistensi berkas rekam medis.
 2. **Duplikasi & Human Error** — kesalahan input kode diagnosis (ICD-10) dan tindakan (ICD-9 CM) tanpa validasi otomatis.
 3. **Pencarian Berkas Lambat** — temu-balik rekam medis fisik memakan waktu 15–60 menit.
 4. **Klaim Pending/Dispute** — berkas tertahan tanpa pencatatan alasan penolakan terpusat.
 
-## 👥 Target Pengguna (7 Role RBAC)
+## Target Pengguna (7 Role RBAC)
 
 | Peran | Tanggung Jawab Utama |
 | :--- | :--- |
@@ -36,7 +36,7 @@
 | `keuangan` | Monitoring klaim disetujui, rekonsiliasi |
 | `manajemen` | Akses read-only dasbor analitik |
 
-## ✨ Fitur Inti
+## Fitur Inti
 
 1. **Autentikasi & RBAC Multi-Role** — sesi aman JWT via *HttpOnly Cookie*
 2. **Manajemen Pasien** — CRUD + validasi NIK (16 digit), No BPJS (13 digit)
@@ -47,7 +47,7 @@
 7. **Dasbor Analitik** — Top 10 ICD-10 + metrik status klaim *real-time*
 8. **Audit Trail** — pencatatan otomatis seluruh mutasi data klinis
 
-## 🔒 Keamanan
+## Keamanan
 
 - OWASP Top 10 compliant
 - Autentikasi JWT via *HttpOnly*, *Secure*, *SameSite=Lax* cookie
@@ -55,7 +55,7 @@
 - *Rate limiter* login (5 percobaan/menit/IP)
 - *Soft delete* + *ACID transaction* PostgreSQL
 
-## 📊 Target Keberhasilan
+## Target Keberhasilan
 
 - Pencarian berkas: **< 5 detik** (optimal < 1 detik)
 - Duplikasi kode medis: **0%**
@@ -74,6 +74,6 @@
 | 5 (Pekan 9–10) | Frontend Development & API Integration |
 | 6 (Pekan 11–12) | Testing, Security Hardening & Handover |
 
-## 👨‍💻 Tim
+## Tim
 
 Praktikum Rekayasa Perangkat Lunak — Semester 3, Pradita University
