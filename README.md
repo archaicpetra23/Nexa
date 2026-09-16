@@ -563,7 +563,7 @@ services:
     environment:
       POSTGRES_DB: nexa_casemix
       POSTGRES_USER: nexa_admin
-      POSTGRES_PASSWORD: nexa_secure_password
+      POSTGRES_PASSWORD: a_secure_password
     ports:
       - "5432:5432"
     volumes:
