@@ -1,4 +1,3 @@
-# Product Requirement Document (PRD)
 ## Nexa: Sistem Informasi Pengelolaan Data Casemix Terintegrasi
 
 | Metadata | Keterangan |
