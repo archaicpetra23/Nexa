@@ -8,7 +8,7 @@
 - **Frontend:** Vue 3 (Composition API, Vite, PrimeVue, Tailwind CSS, Pinia)
 - **Arsitektur:** Decoupled Monorepo, RESTful API, JWT + RBAC
 
-## Struktur Dokumen
+## Dokumen Lengkap
 
 | File | Deskripsi |
 | :--- | :--- |
