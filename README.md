@@ -73,6 +73,3 @@
 | 5 (Pekan 9–10) | Frontend Development & API Integration |
 | 6 (Pekan 11–12) | Testing, Security Hardening & Handover |
 
-## Tim
-
-Praktikum Rekayasa Perangkat Lunak — Semester 3, Pradita University
