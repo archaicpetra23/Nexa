@@ -15,7 +15,6 @@
 | [`ide_proyek.md`](ide_proyek.md) | Ide proyek, masalah, target pengguna, fitur inti, dan kriteria keberhasilan |
 | [`docs/product_requirement_document_prd_nexa.md`](docs/product_requirement_document_prd_nexa.md) | Product Requirement Document (PRD) lengkap dalam format Markdown |
 | [`docs/Nexa (PRD).pdf`](docs/Nexa%20(PRD).pdf) | PRD dalam format PDF |
-| [`docs/Nexa (PRD).docx`](docs/Nexa%20(PRD).docx) | PRD dalam format DOCX |
 
 ## Masalah yang Diselesaikan
 
