@@ -1,6 +1,6 @@
 # Nexa — Sistem Informasi Casemix Terintegrasi
 
-**Nexa** adalah aplikasi web rekam medis dan penagihan terintegrasi yang dirancang untuk mempercepat siklus operasional klaim BPJS Kesehatan di Rumah Sakit Umum Daerah (RSUD). Sistem ini menjembatani *data silos* antara loket pendaftaran, dokter DPJP, perawat bangsal, koder Casemix, dan bagian keuangan.
+**Nexa** adalah aplikasi web rekam medis dan penagihan terintegrasi yang dirancakan untuk mempercepat siklus operasional klaim BPJS Kesehatan di Rumah Sakit Umum Daerah (RSUD). Sistem ini menjembatani *data silos* antara loket pendaftaran, dokter DPJP, perawat bangsal, koder Casemix, dan bagian keuangan.
 
 ## Tech Stack
 
@@ -10,10 +10,23 @@
 
 ## Dokumen Lengkap
 
+### Dokumen Produk & Ide
+
 | File | Deskripsi |
 | :--- | :--- |
-| [`docs/Nexa (PRD).md`](docs/Nexa%20(PRD).md) | Product Requirement Document lengkap dalam format Markdown |
-| [`docs/Nexa (PRD).pdf`](docs/Nexa%20(PRD).pdf) | Product Requirement Document lengkap dalam format PDF |
+| [`docs/ide_proyek.md`](docs/ide_proyek.md) | Ide proyek, masalah, target pengguna, fitur inti, dan kriteria keberhasilan |
+| [`docs/Nexa (PRD).md`](docs/Nexa%20(PRD).md) | Product Requirement Document (PRD) lengkap dalam format Markdown |
+| [`docs/Nexa (PRD).pdf`](docs/Nexa%20(PRD).pdf) | PRD dalam format PDF |
+| [`docs/Nexa (PRD).docx`](docs/Nexa%20(PRD).docx) | PRD dalam format Word |
+
+### Dokumen Panduan Pengembangan
+
+| File | Deskripsi |
+| :--- | :--- |
+| [`docs/Agent.md`](docs/Agent.md) | Panduan perilaku AI coding agent (main rules, alur kerja per task, larangan khusus) |
+| [`docs/Coding_Style.md`](docs/Coding_Style.md) | Standar gaya penulisan kode Backend (Go/Gin/GORM) & Frontend (Vue 3/PrimeVue/Pinia) |
+| [`docs/Logging.md`](docs/Logging.md) | Konvensi dev log — aturan pencatatan pekerjaan ke `DEVLOG.md` |
+| [`docs/DevLog.md`](docs/DevLog.md) | Dev log kronologis — riwayat fitur, fix, refactor, dan error yang masih terbuka |
 
 ## Masalah yang Diselesaikan
 
@@ -57,18 +70,17 @@
 
 - Pencarian berkas: **< 5 detik** (optimal < 1 detik)
 - Duplikasi kode medis: **0%**
-- Efisiensi koding Casemix: **terpangkas ≥ 50%**
+- Efisiensi koding Casemix: **terpangkas >= 50%**
 - Transparansi dispute: **100%** berkas pending/tolak tercatat alasan
 - Audit trail: **100%** aksi mutasi tercatat di `log_aktivitas`
 
-## 🗺️ Development Roadmap
+## Development Roadmap
 
 | Sprint | Fokus |
 | :--- | :--- |
-| 1 (Pekan 1–2) | Environment Setup & Database Modeling |
-| 2 (Pekan 3–4) | Core Backend & Identity Management |
-| 3 (Pekan 5–6) | Rekam Medis & Pencarian Kode Klinis |
-| 4 (Pekan 7–8) | Logika Casemix & Engine Klaim |
-| 5 (Pekan 9–10) | Frontend Development & API Integration |
-| 6 (Pekan 11–12) | Testing, Security Hardening & Handover |
-
+| 1 (Pekan 1-2) | Environment Setup & Database Modeling |
+| 2 (Pekan 3-4) | Core Backend & Identity Management |
+| 3 (Pekan 5-6) | Rekam Medis & Pencarian Kode Klinis |
+| 4 (Pekan 7-8) | Logika Casemix & Engine Klaim |
+| 5 (Pekan 9-10) | Frontend Development & API Integration |
+| 6 (Pekan 11-12) | Testing, Security Hardening & Handover |

@@ -4,13 +4,39 @@ Dokumen ini menjadi rujukan gaya penulisan kode untuk seluruh kontributor proyek
 
 ---
 
-## 0. Prinsip Umum
+## 0. Dokumen Wajib Dibaca Sebelum Mulai Kerja
+
+Setiap kontributor — **terutama AI coding agent** (Claude, Copilot, Codex, Cursor, Gemini CLI, dll.) — **wajib membaca dokumen berikut secara berurutan sebelum menyentuh kode**:
+
+1. **`AGENT.md`** — aturan main untuk AI agent: apa yang boleh/tidak boleh dilakukan, alur kerja per task, kewajiban logging.
+2. **`CODING_STYLE.md`** (dokumen ini) — standar penulisan kode, struktur, keamanan, konvensi DB.
+3. **`LOGGING.md`** — format wajib untuk mencatat pekerjaan ke `docs/DEVLOG.md`.
+4. **`docs/DEVLOG.md`** — baca beberapa entri terakhir untuk tahu konteks pekerjaan sebelumnya (apa yang sudah dikerjakan, apa yang masih *open*) sebelum mulai task baru.
+
+Jangan mulai implementasi sebelum keempat dokumen ini dibaca. Kalau ada instruksi dari user yang bertentangan dengan dokumen-dokumen ini, ikuti aturan di `AGENT.md` §7 (ingatkan risikonya dulu, jangan diam-diam melanggar).
+
+---
+
+## 0.1 Prinsip Umum
 
 1. **Konsistensi > Preferensi Pribadi.** Ikuti pola yang sudah ada di codebase, bukan gaya pribadi.
 2. **Explicit > Implicit.** Hindari "magic value"; gunakan konstanta bernama untuk status (`draft`, `pending`, `disetujui`, `ditolak`, role, dll).
 3. **Fail Safe, Fail Loud.** Error tidak boleh ditelan diam-diam (`_ = err` dilarang kecuali dikomentari alasannya).
 4. **Security by Default.** Setiap endpoint baru wajib melewati checklist RBAC + IDOR (lihat §3.4) sebelum merge.
 5. Semua kode, komentar teknis, nama variabel/fungsi ditulis **Bahasa Inggris**. Istilah domain medis/BPJS yang sudah baku (`icd10`, `cbgs`, `dpjp`, `bpjs`) boleh dipertahankan apa adanya, mengikuti penamaan tabel di §7.
+6. **Dilarang menggunakan emoji/emoticon** di kode, komentar, commit message, UI, maupun dokumentasi (`.md`) proyek ini — lihat aturan detail di §0.2.
+
+---
+
+## 0.2 Kebijakan Ikon (Tanpa Emoji)
+
+- **Emoji/emoticon Unicode dilarang** di seluruh bagian proyek: kode, commit message, log (`DEVLOG.md`), komentar PR, maupun UI aplikasi (Vue/PrimeVue). Ini termasuk simbol status seperti ✅ ❌ 🐛 ⚠️ dan sejenisnya.
+- **Alasan:** konsistensi visual (*clinical look* sesuai §12 UI/UX), rendering emoji tidak konsisten antar OS/browser, dan menghindari kesan tidak profesional pada sistem rekam medis rumah sakit.
+- **Sebagai gantinya, gunakan icon pack berbasis SVG/komponen:**
+  - **Frontend:** `lucide-vue-next` atau `PrimeIcons` (bawaan PrimeVue, class `pi pi-*`) untuk seluruh ikon UI — status, tombol, navigasi, badge.
+  - **Dokumentasi (`.md`):** gunakan **label teks** (`[SUKSES]`, `[GAGAL]`, `[TERBUKA]`, `[PERINGATAN]`) atau badge Markdown (mis. `shields.io`) — bukan emoji Unicode.
+  - Kalau user memberikan icon pack kustom (mis. hasil export dari Figma/Iconify), pakai itu dan dokumentasikan sumbernya di `frontend/src/assets/icons/README.md`.
+- Status badge klaim (§12 PRD: `draft`/`pending`/`disetujui`/`ditolak`) tetap pakai warna PrimeVue Tag seperti sudah didefinisikan — **bukan** emoji warna (🔴🟢🟡).
 
 ---
 
@@ -241,6 +267,7 @@ Tipe yang dipakai: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `
 
 ## 9. Checklist Sebelum Pull Request
 
+- [ ] `AGENT.md` dan `LOGGING.md` sudah dibaca sebelum mulai kerja (§0).
 - [ ] `gofmt`/ESLint bersih, tanpa warning lint.
 - [ ] Endpoint baru sudah dicek RBAC middleware + validasi kepemilikan (IDOR).
 - [ ] Operasi multi-tabel dibungkus transaksi.
@@ -248,3 +275,5 @@ Tipe yang dipakai: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `
 - [ ] Tidak ada `console.log` / `fmt.Println` debug tersisa.
 - [ ] Response API mengikuti format standar §4.
 - [ ] Tidak ada credential/secret hardcoded (gunakan `.env`).
+- [ ] Tidak ada emoji/emoticon di kode, komentar, UI, atau dokumentasi (§0.2) — pakai icon pack (`lucide-vue-next`/`PrimeIcons`) atau label teks.
+- [ ] Entri baru sudah ditambahkan ke `docs/DEVLOG.md` sesuai format `LOGGING.md`.
