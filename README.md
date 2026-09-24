@@ -14,13 +14,11 @@
 
 ### 1. Install Docker
 
-CachyOS / Arch Linux:
-```bash
-sudo pacman -S docker docker-compose
-sudo systemctl enable --now docker
-sudo usermod -aG docker $USER
-# Log out / login lagi biar grup docker aktif
-```
+Download & install Docker Desktop sesuai OS masing-masing:
+
+- **[https://www.docker.com/get-started/](https://www.docker.com/get-started/)** (Windows, macOS, Linux)
+
+Pastikan Docker running sebelum lanjut ke langkah berikutnya.
 
 ### 2. Build & Run
 
@@ -54,13 +52,7 @@ docker compose up -d backend
 http://localhost:5173
 ```
 
-### 5. Cara Menggunakan
-
-1. **Login Page** — Masukkan NIP dan password
-2. **Dashboard** — Menampilkan NIP, Nama, dan Role
-3. **Logout** — Kembali ke Login Page
-
-### 6. Stop & Cleanup
+### 5. Stop & Cleanup
 
 ```bash
 # Stop semua service
@@ -76,15 +68,26 @@ docker compose down -v
 
 ### 1. Install Dependencies
 
-CachyOS / Arch Linux:
+**Windows:**
+- **Go 1.22+**: [https://go.dev/dl/](https://go.dev/dl/)
+- **PostgreSQL 16**: [https://www.postgresql.org/download/windows/](https://www.postgresql.org/download/windows/)
+- **Node.js 18+**: [https://nodejs.org/](https://nodejs.org/)
+
+Atau pakai Chocolatey:
+```powershell
+choco install go postgresql nodejs
+```
+
+**Ubuntu / Debian:**
 ```bash
-sudo pacman -S go postgresql nodejs npm
+sudo apt update
+sudo apt install -y golang-1.22 postgresql-16 nodejs npm
 ```
 
 Atau install manual:
-- **Go 1.22+**: `https://go.dev/dl/`
-- **PostgreSQL 16**: `https://www.postgresql.org/download/`
-- **Node.js 18+**: `https://nodejs.org/`
+- **Go 1.22+**: [https://go.dev/dl/](https://go.dev/dl/)
+- **PostgreSQL 16**: [https://www.postgresql.org/download/linux/ubuntu/](https://www.postgresql.org/download/linux/ubuntu/)
+- **Node.js 18+**: [https://nodejs.org/](https://nodejs.org/)
 
 Verify:
 ```bash
@@ -95,6 +98,11 @@ node --version      # minimal 18
 
 ### 2. Start PostgreSQL Service
 
+**Windows:**
+- PostgreSQL otomatis jalan sebagai service setelah install
+- Atau buka **pgAdmin** → connect ke postgres
+
+**Ubuntu / Debian:**
 ```bash
 sudo systemctl enable --now postgresql
 sudo -u postgres createuser --superuser $USER
@@ -141,16 +149,7 @@ npm run dev
 ```
 → Frontend jalan di `http://localhost:5173`
 
-### 5. Cara Menggunakan
-
-1. Buka browser → `http://localhost:5173`
-2. Tampil **Login Page**
-3. Masukkan **NIP** dan **Password**
-4. Klik **Login**
-5. Redirect ke **Dashboard** — menampilkan NIP, Nama, dan Role
-6. Klik **Logout** untuk kembali ke Login Page
-
-### 6. Stop Services
+### 5. Stop Services
 
 ```bash
 pkill -f "go run cmd/server"
