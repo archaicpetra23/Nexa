@@ -10,10 +10,11 @@ Setiap kontributor — **terutama AI coding agent** (Claude, Copilot, Codex, Cur
 
 1. **`AGENT.md`** — aturan main untuk AI agent: apa yang boleh/tidak boleh dilakukan, alur kerja per task, kewajiban logging.
 2. **`CODING_STYLE.md`** (dokumen ini) — standar penulisan kode, struktur, keamanan, konvensi DB.
-3. **`LOGGING.md`** — format wajib untuk mencatat pekerjaan ke `docs/DEVLOG.md`.
-4. **`docs/DEVLOG.md`** — baca beberapa entri terakhir untuk tahu konteks pekerjaan sebelumnya (apa yang sudah dikerjakan, apa yang masih *open*) sebelum mulai task baru.
+3. **`design_ui.md`** — spesifikasi desain UI: color palette, tipografi, layout, spesifikasi komponen (sidebar, tombol, badge status, table, form), motion, dan aksesibilitas. **Wajib dirujuk untuk setiap pekerjaan frontend** — jangan menebak warna/spacing/typeface sendiri, jangan menyimpang dari token yang sudah ditetapkan di sana.
+4. **`LOGGING.md`** — format wajib untuk mencatat pekerjaan ke `docs/DEVLOG.md`.
+5. **`docs/DEVLOG.md`** — baca beberapa entri terakhir untuk tahu konteks pekerjaan sebelumnya (apa yang sudah dikerjakan, apa yang masih *open*) sebelum mulai task baru.
 
-Jangan mulai implementasi sebelum keempat dokumen ini dibaca. Kalau ada instruksi dari user yang bertentangan dengan dokumen-dokumen ini, ikuti aturan di `AGENT.md` §7 (ingatkan risikonya dulu, jangan diam-diam melanggar).
+Jangan mulai implementasi sebelum kelima dokumen ini dibaca. Kalau ada instruksi dari user yang bertentangan dengan dokumen-dokumen ini, ikuti aturan di `AGENT.md` §7 (ingatkan risikonya dulu, jangan diam-diam melanggar).
 
 ---
 
@@ -197,7 +198,10 @@ async function submitStatusChange(payload) {
 
 ### 3.7 Styling
 - Utility-first dengan **Tailwind**; komponen kompleks (`DataTable`, `AutoComplete`, `Dialog`, `Tag`) pakai **PrimeVue**.
-- Warna status klaim mengikuti mapping baku (§12 PRD) — definisikan sekali di satu util/constant (`statusColors.js`), jangan hardcode warna berulang di tiap komponen.
+- Seluruh keputusan visual (warna, tipografi, spacing, radius, layout, komponen) **wajib mengikuti `design_ui.md`** — dokumen itu adalah satu-satunya sumber kebenaran (*single source of truth*) untuk desain, bukan PRD atau preferensi ad-hoc kontributor/AI agent.
+- Design tokens dari `design_ui.md` §8 (warna, radius, spacing, font) **wajib** didefinisikan sekali sebagai CSS variables / Tailwind config (`tailwind.config.js` `theme.extend`), **jangan** hardcode hex value berulang di tiap komponen.
+- Warna status klaim mengikuti mapping baku di `design_ui.md` §2 (Draft/Pending/Disetujui/Ditolak) — definisikan sekali di satu util/constant (`statusColors.js`) yang membaca dari token yang sama, jangan hardcode warna berulang di tiap komponen.
+- Badge status **wajib** disertai ikon + label teks (bukan warna saja) sesuai `design_ui.md` §5 dan §0.2 (kebijakan ikon tanpa emoji — pakai `lucide-vue-next`/`PrimeIcons`).
 
 ---
 
@@ -267,7 +271,8 @@ Tipe yang dipakai: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `
 
 ## 9. Checklist Sebelum Pull Request
 
-- [ ] `AGENT.md` dan `LOGGING.md` sudah dibaca sebelum mulai kerja (§0).
+- [ ] `AGENT.md`, `design_ui.md`, dan `LOGGING.md` sudah dibaca sebelum mulai kerja (§0).
+- [ ] Komponen frontend baru tidak menyimpang dari token warna/tipografi/spacing di `design_ui.md` (§3.7).
 - [ ] `gofmt`/ESLint bersih, tanpa warning lint.
 - [ ] Endpoint baru sudah dicek RBAC middleware + validasi kepemilikan (IDOR).
 - [ ] Operasi multi-tabel dibungkus transaksi.
