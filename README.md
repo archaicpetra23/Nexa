@@ -16,7 +16,7 @@
 
 Download & install Docker Desktop sesuai OS masing-masing:
 
-- **[https://www.docker.com/get-started/](https://www.docker.com/get-started/)** (Windows, macOS, Linux)
+- **[https://www.docker.com/get-started/](https://www.docker.com)** (Windows, macOS, Linux)
 
 Pastikan Docker running sebelum lanjut ke langkah berikutnya.
 
