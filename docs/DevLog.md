@@ -4,6 +4,55 @@
 
 ---
 
+## [2026-10-01 00:36] — Fix dashboard harus scroll untuk melihat konten + rebuild DashboardView
+
+- **Agent:** SSERAPHIM (Hermes)
+- **Tipe:** Fix Bug
+- **Status:** Selesai
+- **Modul:** Frontend UI/UX (Dashboard, Layout)
+- **File terdampak:**
+  - `frontend/src/layouts/DefaultLayout.vue` — tulis ulang, layout flex sidebar+topbar+konten
+  - `frontend/src/views/DashboardView.vue` — tulis ulang mengikuti bahasa desain LandingView/AuthLayout
+  - `frontend/src/components/Sidebar.vue` — penyesuaian (sticky, 100vh, role menu)
+  - `frontend/src/components/Topbar.vue` — penyesuaian (sticky, breadcrumb, user info)
+  - `frontend/Dockerfile` — `npm install` dijalankan saat start
+  - `frontend/src/router/index.js` — tambah `scrollBehavior` kembali ke atas
+- **Deskripsi:**
+  Memperbaiki bug dashboard yang kontennya baru muncul setelah di-scroll ke bawah. Root cause: style scoped `DefaultLayout.vue` (`.app-shell`, `.app-main-column`, `.app-content`, `.app-content-inner`) tidak ter-apply — Vite menyajikan versi CSS lama dari cache transform, sehingga `.app-shell` tetap `display: block`. Akibatnya sidebar setinggi 100vh (757px) menumpuk di atas main column, dan konten baru mulai di y=823px. Setelah cache Vite dibersihkan dan layout ditulis ulang, `.app-shell` menjadi `display: flex` dan konten mulai di y=96px. DashboardView juga dirombak agar konsisten dengan bahasa desain LandingView dan LoginView (kicker uppercase, panel dengan border+shadow-panel, icon tile #EEF2F5, chip tanggal, grid dua kolom, catatan bawah).
+- **Error/Kendala:**
+  Gejala awal: `.app-shell` computed `display: block`, `.app-main-column` top 757px, `.app-content` `flex: 0 1 auto`, `.app-content-inner` `padding-top: 0px`. Diagnosa lewat Chrome DevTools Protocol (query CSSOM) menunjukkan rules untuk scope ID layout hanya berisi `.max-w-content` (versi lama), bukan rules baru. Diverifikasi dengan `curl` ke endpoint CSS Vite yang mengembalikan `__vite__css` lama, sementara file di disk sudah benar dan inode host==container. Fix: hapus `/app/node_modules/.vite` di container lalu restart frontend.
+- **Next Step:**
+  Buat halaman yang belum ada (PasienView, RekamMedisView, KlaimView, AnalyticsView) dengan bahasa desain yang sama, lalu verifikasi lewat pengukuran layout otomatis.
+
+---
+
+## [2026-09-30 23:00] — Apply Design_UI.md design system to frontend
+
+- **Agent:** Claude Fable 5
+- **Tipe:** Refactor
+- **Status:** Selesai
+- **Modul:** Frontend UI/UX
+- **File terdampak:**
+  - `frontend/src/style.css` — add IBM Plex Sans/Mono font imports via Google Fonts
+  - `frontend/src/components/Sidebar.vue` — new, role-based navigation menu with active state styling
+  - `frontend/src/components/Topbar.vue` — new, breadcrumb + user info header
+  - `frontend/src/layouts/DefaultLayout.vue` — new, sidebar + topbar + content layout
+  - `frontend/src/layouts/AuthLayout.vue` — new, centered card layout for login
+  - `frontend/src/components/StatusBadge.vue` — update colors to exact hex from Design_UI.md (no Tailwind classes)
+  - `frontend/src/views/LoginView.vue` — remove gradient background, use AuthLayout, apply design tokens
+  - `frontend/src/views/DashboardView.vue` — use DefaultLayout, apply design tokens
+  - `frontend/src/views/LandingView.vue` — apply design tokens, consistent typography
+  - `frontend/src/views/AdminView.vue` — use DefaultLayout, apply design tokens to all tabs
+  - `frontend/src/components/UserFormModal.vue` — apply design tokens to form labels and inputs
+  - `frontend/src/components/UnitFormModal.vue` — apply design tokens
+  - `frontend/src/components/DeleteConfirm.vue` — apply danger button color (#B54245)
+- **Deskripsi:**
+  Applied complete design system from Design_UI.md to all existing frontend pages and components. Added IBM Plex Sans (UI) and IBM Plex Mono (codes/data) fonts. Created reusable Sidebar component with role-based menu (PRD §4 RBAC matrix: petugas_rm/dokter/perawat see Pasien+Rekam Medis, koder_casemix/keuangan see Klaim, manajemen sees Analytics+Admin, admin_ti sees Admin). Created Topbar with breadcrumb and user info. Created DefaultLayout (sidebar+topbar+content) and AuthLayout (centered card). Updated StatusBadge with exact colors from Design_UI.md §2 (draft #9CA3AF, pending #B7791F, disetujui #2F7A4F, ditolak #B54245) with bg/text pairs, not Tailwind utility classes. Removed gradient from LoginView per "tanpa gradient" principle. All components use CSS custom properties (--color-primary, --color-text-secondary, --radius-base) from style.css. Typography follows 14px body, 13px labels, mono font for codes (NIK, No. RM, ICD). Buttons use 120-150ms transitions per Design_UI.md §6 motion guidelines.
+- **Error/Kendala:** –
+- **Next Step:** Test build with `npm run build`, verify all pages render correctly with design tokens. Create remaining views (PasienView, RekamMedisView, KlaimView, AnalyticsView) following same design system.
+
+---
+
 ## [2026-09-30 23:34] — Backend: Lengkapi endpoint admin (user CRUD, audit trail, master units/roles)
 
 - **Agent:** Kiro (Coding-Dewa)

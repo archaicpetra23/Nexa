@@ -2,22 +2,22 @@
   <Dialog v-model:visible="visible" modal :header="title" :style="{ width: '28rem' }">
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-secondary mb-1">
-          Nama Unit <span class="text-red-600">*</span>
+        <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
+          Nama Unit <span style="color: #B54245">*</span>
         </label>
-        <InputText v-model="form.nama_unit" class="w-full" placeholder="Nama unit" />
-        <small v-if="errors.nama_unit" class="text-red-600">{{ errors.nama_unit }}</small>
+        <InputText v-model="form.nama_unit" class="w-full text-sm" placeholder="Nama unit" />
+        <small v-if="errors.nama_unit" class="text-xs" style="color: #B54245">{{ errors.nama_unit }}</small>
       </div>
     </div>
     <template #footer>
-      <Button label="Batal" severity="secondary" text @click="visible = false" />
-      <Button label="Simpan" @click="submit" :loading="loading" />
+      <Button label="Batal" severity="secondary" text @click="visible = false" class="text-sm" />
+      <Button label="Simpan" @click="submit" :loading="loading" class="text-sm" />
     </template>
   </Dialog>
 </template>
 
 <script setup>
-import { ref, watch, reactive } from 'vue'
+import { ref, watch, reactive, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -34,17 +34,16 @@ const loading = ref(false)
 const form = reactive({ nama_unit: '' })
 const errors = reactive({})
 
-const title = ref('Tambah Unit')
+const isEdit = computed(() => !!props.unit)
+const title = computed(() => isEdit.value ? 'Edit Unit' : 'Tambah Unit')
 
 watch(() => props.show, (val) => {
   visible.value = val
   if (val) {
     if (props.unit) {
       form.nama_unit = props.unit.nama_unit
-      title.value = 'Edit Unit'
     } else {
       form.nama_unit = ''
-      title.value = 'Tambah Unit'
     }
     Object.keys(errors).forEach(k => delete errors[k])
   }
@@ -61,7 +60,7 @@ function validate() {
 async function submit() {
   if (!validate()) return
   loading.value = true
-  emit('saved', { ...form, id: props.unit?.id_unit })
+  emit('saved', form)
   loading.value = false
   visible.value = false
 }

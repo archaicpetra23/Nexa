@@ -3,71 +3,71 @@
     <div class="space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-secondary mb-1">
-            Username <span class="text-red-600">*</span>
+          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
+            Username <span style="color: #B54245">*</span>
           </label>
-          <InputText v-model="form.username" class="w-full" placeholder="Username" />
-          <small v-if="errors.username" class="text-red-600">{{ errors.username }}</small>
+          <InputText v-model="form.username" class="w-full text-sm" placeholder="Username" />
+          <small v-if="errors.username" class="text-xs" style="color: #B54245">{{ errors.username }}</small>
         </div>
         <div>
-          <label class="block text-sm font-medium text-secondary mb-1">
-            Password <span v-if="!isEdit" class="text-red-600">*</span>
+          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
+            Password <span v-if="!isEdit" style="color: #B54245">*</span>
           </label>
-          <InputText v-model="form.password" type="password" class="w-full" :placeholder="isEdit ? 'Kosongkan jika tidak diubah' : 'Password'" />
-          <small v-if="errors.password" class="text-red-600">{{ errors.password }}</small>
+          <InputText v-model="form.password" type="password" class="w-full text-sm" :placeholder="isEdit ? 'Kosongkan jika tidak diubah' : 'Password'" />
+          <small v-if="errors.password" class="text-xs" style="color: #B54245">{{ errors.password }}</small>
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-secondary mb-1">
-          Nama <span class="text-red-600">*</span>
+        <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
+          Nama <span style="color: #B54245">*</span>
         </label>
-        <InputText v-model="form.nama" class="w-full" placeholder="Nama lengkap" />
-        <small v-if="errors.nama" class="text-red-600">{{ errors.nama }}</small>
+        <InputText v-model="form.nama" class="w-full text-sm" placeholder="Nama lengkap" />
+        <small v-if="errors.nama" class="text-xs" style="color: #B54245">{{ errors.nama }}</small>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-secondary mb-1">
-            Profesi <span class="text-red-600">*</span>
+          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
+            Profesi <span style="color: #B54245">*</span>
           </label>
-          <Select v-model="form.profesi" :options="profesiOptions" optionLabel="label" optionValue="value" placeholder="Pilih profesi" class="w-full" />
-          <small v-if="errors.profesi" class="text-red-600">{{ errors.profesi }}</small>
+          <Select v-model="form.profesi" :options="profesiOptions" optionLabel="label" optionValue="value" placeholder="Pilih profesi" class="w-full text-sm" />
+          <small v-if="errors.profesi" class="text-xs" style="color: #B54245">{{ errors.profesi }}</small>
         </div>
         <div v-if="form.profesi === 'Dokter'">
-          <label class="block text-sm font-medium text-secondary mb-1">Spesialisasi</label>
-          <InputText v-model="form.spesialisasi" class="w-full" placeholder="Spesialisasi" />
+          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">Spesialisasi</label>
+          <InputText v-model="form.spesialisasi" class="w-full text-sm" placeholder="Spesialisasi" />
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-secondary mb-1">
-          No. STR <span class="text-red-600">*</span>
+        <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
+          No. STR <span style="color: #B54245">*</span>
         </label>
-        <InputText v-model="form.no_str" class="w-full" placeholder="Nomor STR" />
-        <small v-if="errors.no_str" class="text-red-600">{{ errors.no_str }}</small>
+        <InputText v-model="form.no_str" class="w-full text-sm font-mono" placeholder="Nomor STR" />
+        <small v-if="errors.no_str" class="text-xs" style="color: #B54245">{{ errors.no_str }}</small>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-secondary mb-1">
-            Role <span class="text-red-600">*</span>
+          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
+            Role <span style="color: #B54245">*</span>
           </label>
-          <Select v-model="form.id_role" :options="roles" optionLabel="nama_role" optionValue="id_role" placeholder="Pilih role" class="w-full" />
-          <small v-if="errors.id_role" class="text-red-600">{{ errors.id_role }}</small>
+          <Select v-model="form.id_role" :options="roles" optionLabel="nama_role" optionValue="id_role" placeholder="Pilih role" class="w-full text-sm" />
+          <small v-if="errors.id_role" class="text-xs" style="color: #B54245">{{ errors.id_role }}</small>
         </div>
         <div>
-          <label class="block text-sm font-medium text-secondary mb-1">
-            Unit <span class="text-red-600">*</span>
+          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
+            Unit <span style="color: #B54245">*</span>
           </label>
-          <Select v-model="form.id_unit" :options="units" optionLabel="nama_unit" optionValue="id_unit" placeholder="Pilih unit" class="w-full" />
-          <small v-if="errors.id_unit" class="text-red-600">{{ errors.id_unit }}</small>
+          <Select v-model="form.id_unit" :options="units" optionLabel="nama_unit" optionValue="id_unit" placeholder="Pilih unit" class="w-full text-sm" />
+          <small v-if="errors.id_unit" class="text-xs" style="color: #B54245">{{ errors.id_unit }}</small>
         </div>
       </div>
     </div>
     <template #footer>
-      <Button label="Batal" severity="secondary" text @click="visible = false" />
-      <Button label="Simpan" @click="submit" :loading="loading" />
+      <Button label="Batal" severity="secondary" text @click="visible = false" class="text-sm" />
+      <Button label="Simpan" @click="submit" :loading="loading" class="text-sm" />
     </template>
   </Dialog>
 </template>

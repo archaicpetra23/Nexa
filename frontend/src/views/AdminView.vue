@@ -1,203 +1,208 @@
 <template>
-  <div class="min-h-screen bg-base">
-    <header class="bg-primary text-white py-4 px-8">
-      <div class="max-w-screen-xl mx-auto flex justify-between items-center">
-        <h1 class="text-2xl font-semibold">Nexa</h1>
-        <div class="flex items-center gap-4">
-          <span class="text-sm">{{ authStore.user?.nama }}</span>
-          <span class="text-sm opacity-75">{{ authStore.user?.role }}</span>
-          <router-link to="/dashboard" class="px-4 py-2 bg-white text-primary rounded text-sm hover:bg-gray-100 transition-colors">
-            Kembali ke Dashboard
-          </router-link>
-          <button @click="handleLogout" class="px-4 py-2 bg-white text-primary rounded text-sm hover:bg-gray-100 transition-colors">
-            Logout
-          </button>
-        </div>
+  <DefaultLayout>
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-2xl font-semibold" style="color: var(--color-primary)">Panel Admin</h1>
+      <div class="flex gap-2">
+        <button
+          v-if="activeTab === 'users'"
+          @click="openUserModal"
+          class="px-4 py-2 text-white rounded-base text-sm font-medium transition-colors duration-120"
+          style="background-color: var(--color-primary)"
+          @mouseenter="$event.target.style.backgroundColor = 'var(--color-primary-hover)'"
+          @mouseleave="$event.target.style.backgroundColor = 'var(--color-primary)'"
+        >
+          Tambah Pengguna
+        </button>
+        <button
+          v-if="activeTab === 'units'"
+          @click="openUnitModal"
+          class="px-4 py-2 text-white rounded-base text-sm font-medium transition-colors duration-120"
+          style="background-color: var(--color-primary)"
+          @mouseenter="$event.target.style.backgroundColor = 'var(--color-primary-hover)'"
+          @mouseleave="$event.target.style.backgroundColor = 'var(--color-primary)'"
+        >
+          Tambah Unit
+        </button>
       </div>
-    </header>
+    </div>
 
-    <main class="max-w-screen-xl mx-auto px-8 py-10">
-      <div class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-semibold text-primary">Panel Admin</h1>
-        <div class="flex gap-2">
-          <button v-if="activeTab === 'users'" @click="openUserModal" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-hover transition-colors text-sm">
-            Tambah Pengguna
-          </button>
-          <button v-if="activeTab === 'units'" @click="openUnitModal" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-hover transition-colors text-sm">
-            Tambah Unit
-          </button>
-        </div>
-      </div>
+    <div v-if="loading" class="text-center py-12">
+      <p class="text-secondary text-sm">Memuat data...</p>
+    </div>
 
-      <div v-if="loading" class="text-center py-12">
-        <p class="text-secondary">Memuat data...</p>
-      </div>
-
-      <template v-else>
-        <!-- Tab Navigation -->
-        <div class="border-b border-border mb-6">
-          <nav class="flex gap-1" role="tablist">
-            <button
-              v-for="tab in tabs"
-              :key="tab.key"
-              @click="activeTab = tab.key"
-              :class="[
-                'px-4 py-3 text-sm font-medium rounded-t-base transition-colors',
-                activeTab === tab.key
-                  ? 'bg-primary text-white'
-                  : 'text-secondary hover:text-primary hover:bg-base'
-              ]"
-              role="tab"
-              :aria-selected="activeTab === tab.key"
-            >
-              {{ tab.label }}
-            </button>
-          </nav>
-        </div>
-
-        <!-- Users Tab -->
-        <section v-if="activeTab === 'users'" class="space-y-4">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold text-primary">Manajemen Pengguna</h2>
-            <div class="flex gap-2">
-              <InputText v-model="userSearch" placeholder="Cari nama, username, atau role..." class="w-64" @input="debouncedFetchUsers" />
-              <Select v-model="userRoleFilter" :options="roleFilterOptions" placeholder="Semua Role" class="w-40" @change="fetchUsers" />
-            </div>
-          </div>
-
-          <DataTable
-            :value="users"
-            :loading="usersLoading"
-            :paginator="true"
-            :rows="10"
-            :totalRecords="usersTotal"
-            :rowsPerPageOptions="[10, 20, 50]"
-            :lazy="true"
-            @page="onUserPageChange"
-            responsiveLayout="scroll"
-            selectionMode="single"
-            :selection="selectedUser"
+    <template v-else>
+      <!-- Tab Navigation -->
+      <div class="border-b mb-6" style="border-color: var(--color-border)">
+        <nav class="flex gap-1" role="tablist">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            @click="activeTab = tab.key"
+            :class="[
+              'px-4 py-3 text-sm font-medium rounded-base transition-colors duration-120',
+              activeTab === tab.key
+                ? 'text-white'
+                : 'text-secondary'
+            ]"
+            :style="activeTab === tab.key
+              ? { backgroundColor: 'var(--color-primary)' }
+              : {}"
+            role="tab"
+            :aria-selected="activeTab === tab.key"
           >
-            <Column field="id_user" header="ID" style="width: 6rem">
-              <template #body="slotProps">
-                <span class="font-mono text-sm">{{ slotProps.data.id_user }}</span>
-              </template>
-            </Column>
-            <Column field="username" header="Username" style="width: 10rem">
-              <template #body="slotProps">
-                <span class="font-mono text-sm">{{ slotProps.data.username }}</span>
-              </template>
-            </Column>
-            <Column field="nama" header="Nama" style="width: 14rem">
-              <template #body="slotProps">
-                <span class="text-sm">{{ slotProps.data.nama }}</span>
-              </template>
-            </Column>
-            <Column field="profesi" header="Profesi" style="width: 10rem">
-              <template #body="slotProps">
-                <span class="text-sm">{{ slotProps.data.profesi }}</span>
-              </template>
-            </Column>
-            <Column field="spesialisasi" header="Spesialisasi" style="width: 10rem">
-              <template #body="slotProps">
-                <span class="text-sm">{{ slotProps.data.spesialisasi || '-' }}</span>
-              </template>
-            </Column>
-            <Column field="no_str" header="No. STR" style="width: 10rem">
-              <template #body="slotProps">
-                <span class="font-mono text-sm">{{ slotProps.data.no_str }}</span>
-              </template>
-            </Column>
-            <Column field="role" header="Role" style="width: 12rem">
-              <template #body="slotProps">
-                <Select
-                  v-model="slotProps.data.role"
-                  :options="roleNameOptions"
-                  class="w-full"
-                  :disabled="usersLoading"
-                  @change="onUserRoleChange(slotProps.data)"
-                />
-              </template>
-            </Column>
-            <Column field="unit" header="Unit" style="width: 12rem">
-              <template #body="slotProps">
-                <span class="text-sm">{{ slotProps.data.unit_nama || '-' }}</span>
-              </template>
-            </Column>
-            <Column field="status" header="Status" style="width: 8rem">
-              <template #body="slotProps">
-                <StatusBadge :status="slotProps.data.deleted_at ? 'nonaktif' : 'aktif'" type="user" />
-              </template>
-            </Column>
-            <Column header="Aksi" style="width: 7rem">
-              <template #body="slotProps">
-                <div class="flex gap-1">
-                  <Button icon="pi pi-pencil" severity="secondary" text @click="editUser(slotProps.data)" :disabled="usersLoading" aria-label="Edit pengguna" />
-                  <Button icon="pi pi-trash" severity="danger" text @click="confirmDeleteUser(slotProps.data)" :disabled="usersLoading" aria-label="Hapus pengguna" />
-                </div>
-              </template>
-            </Column>
-          </DataTable>
+            {{ tab.label }}
+          </button>
+        </nav>
+      </div>
 
-          <div v-if="users.length === 0 && !usersLoading" class="text-center py-8 text-secondary">
-            Belum ada data pengguna. Klik "Tambah Pengguna" untuk menambah data baru.
+      <!-- Users Tab -->
+      <section v-if="activeTab === 'users'" class="space-y-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold" style="color: var(--color-primary)">Manajemen Pengguna</h2>
+          <div class="flex gap-2">
+            <InputText v-model="userSearch" placeholder="Cari nama, username, atau role..." class="w-64 text-sm" @input="debouncedFetchUsers" />
+            <Select v-model="userRoleFilter" :options="roleFilterOptions" placeholder="Semua Role" class="w-40 text-sm" @change="fetchUsers" />
           </div>
-        </section>
+        </div>
 
-        <!-- Claims Tab -->
-        <section v-if="activeTab === 'claims'" class="space-y-4">
-          <div class="flex flex-wrap gap-2 mb-4">
-            <h2 class="text-lg font-semibold text-primary self-center">Manajemen Klaim</h2>
-            <Dropdown v-model="claimStatusFilter" :options="claimStatusOptions" placeholder="Semua Status" class="w-40" @change="fetchClaims" />
-            <InputText v-model="claimSearch" placeholder="Cari nama pasien..." class="w-64" @input="debouncedFetchClaims" />
-            <div class="flex gap-2">
-              <DatePicker v-model="claimDateFrom" placeholder="Dari" class="w-40" @change="fetchClaims" />
-              <DatePicker v-model="claimDateTo" placeholder="Sampai" class="w-40" @change="fetchClaims" />
-            </div>
-            <button v-if="authStore.user?.role === 'keuangan'" @click="exportClaimsCSV" class="px-4 py-2 border border-border rounded text-secondary hover:bg-base transition-colors text-sm">
-              Ekspor CSV
-            </button>
+        <DataTable
+          :value="users"
+          :loading="usersLoading"
+          :paginator="true"
+          :rows="10"
+          :totalRecords="usersTotal"
+          :rowsPerPageOptions="[10, 20, 50]"
+          :lazy="true"
+          @page="onUserPageChange"
+          responsiveLayout="scroll"
+          selectionMode="single"
+          :selection="selectedUser"
+        >
+          <Column field="id_user" header="ID" style="width: 6rem">
+            <template #body="slotProps">
+              <span class="font-mono text-sm">{{ slotProps.data.id_user }}</span>
+            </template>
+          </Column>
+          <Column field="username" header="Username" style="width: 10rem">
+            <template #body="slotProps">
+              <span class="font-mono text-sm">{{ slotProps.data.username }}</span>
+            </template>
+          </Column>
+          <Column field="nama" header="Nama" style="width: 14rem">
+            <template #body="slotProps">
+              <span class="text-sm">{{ slotProps.data.nama }}</span>
+            </template>
+          </Column>
+          <Column field="profesi" header="Profesi" style="width: 10rem">
+            <template #body="slotProps">
+              <span class="text-sm">{{ slotProps.data.profesi }}</span>
+            </template>
+          </Column>
+          <Column field="spesialisasi" header="Spesialisasi" style="width: 10rem">
+            <template #body="slotProps">
+              <span class="text-sm">{{ slotProps.data.spesialisasi || '-' }}</span>
+            </template>
+          </Column>
+          <Column field="no_str" header="No. STR" style="width: 10rem">
+            <template #body="slotProps">
+              <span class="font-mono text-sm">{{ slotProps.data.no_str }}</span>
+            </template>
+          </Column>
+          <Column field="role" header="Role" style="width: 12rem">
+            <template #body="slotProps">
+              <Select
+                v-model="slotProps.data.role"
+                :options="roleNameOptions"
+                class="w-full text-sm"
+                :disabled="usersLoading"
+                @change="onUserRoleChange(slotProps.data)"
+              />
+            </template>
+          </Column>
+          <Column field="unit" header="Unit" style="width: 12rem">
+            <template #body="slotProps">
+              <span class="text-sm">{{ slotProps.data.unit_nama || '-' }}</span>
+            </template>
+          </Column>
+          <Column field="status" header="Status" style="width: 8rem">
+            <template #body="slotProps">
+              <StatusBadge :status="slotProps.data.deleted_at ? 'nonaktif' : 'aktif'" type="user" />
+            </template>
+          </Column>
+          <Column header="Aksi" style="width: 7rem">
+            <template #body="slotProps">
+              <div class="flex gap-1">
+                <Button icon="pi pi-pencil" severity="secondary" text @click="editUser(slotProps.data)" :disabled="usersLoading" aria-label="Edit pengguna" />
+                <Button icon="pi pi-trash" severity="danger" text @click="confirmDeleteUser(slotProps.data)" :disabled="usersLoading" aria-label="Hapus pengguna" />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+
+        <div v-if="users.length === 0 && !usersLoading" class="text-center py-8 text-secondary text-sm">
+          Belum ada data pengguna. Klik "Tambah Pengguna" untuk menambah data baru.
+        </div>
+      </section>
+
+      <!-- Claims Tab -->
+      <section v-if="activeTab === 'claims'" class="space-y-4">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <h2 class="text-lg font-semibold self-center" style="color: var(--color-primary)">Manajemen Klaim</h2>
+          <Select v-model="claimStatusFilter" :options="claimStatusOptions" placeholder="Semua Status" class="w-40 text-sm" @change="fetchClaims" />
+          <InputText v-model="claimSearch" placeholder="Cari nama pasien..." class="w-64 text-sm" @input="debouncedFetchClaims" />
+          <div class="flex gap-2">
+            <DatePicker v-model="claimDateFrom" placeholder="Dari" class="w-40 text-sm" @change="fetchClaims" />
+            <DatePicker v-model="claimDateTo" placeholder="Sampai" class="w-40 text-sm" @change="fetchClaims" />
           </div>
-
-          <DataTable
-            :value="claims"
-            :loading="claimsLoading"
-            :paginator="true"
-            :rows="10"
-            :totalRecords="claimsTotal"
-            :rowsPerPageOptions="[10, 20, 50]"
-            :lazy="true"
-            @page="onClaimPageChange"
-            responsiveLayout="scroll"
-            selectionMode="single"
-            :selection="selectedClaim"
+          <button
+            v-if="authStore.user?.role === 'keuangan'"
+            @click="exportClaimsCSV"
+            class="px-4 py-2 border rounded-base text-secondary hover:bg-base transition-colors duration-120 text-sm"
+            style="border-color: var(--color-border)"
           >
-            <Column field="id_klaim" header="ID Klaim" style="width: 8rem">
-              <template #body="slotProps">
-                <span class="font-mono text-sm">{{ slotProps.data.id_klaim }}</span>
-              </template>
-            </Column>
-            <Column field="id_rekam" header="No. RM" style="width: 8rem">
-              <template #body="slotProps">
-                <span class="font-mono text-sm">{{ slotProps.data.id_rekam }}</span>
-              </template>
-            </Column>
-            <Column field="pasien_nama" header="Pasien" style="width: 14rem">
-              <template #body="slotProps">
-                <span class="text-sm">{{ slotProps.data.pasien_nama }}</span>
-              </template>
-            </Column>
-            <Column field="kode_cbgs" header="Kode CBGs" style="width: 8rem">
-              <template #body="slotProps">
-                <span class="font-mono text-sm">{{ slotProps.data.kode_cbgs }}</span>
-              </template>
-            </Column>
-            <Column field="status_klaim" header="Status" style="width: 9rem">
-              <template #body="slotProps">
-                <StatusBadge :status="slotProps.data.status_klaim" type="claim" />
-              </template>
-            </Column>
-            <Column field="nominal_klaim" header="Nominal" style="width: 10rem">
+            Ekspor CSV
+          </button>
+        </div>
+
+        <DataTable
+          :value="claims"
+          :loading="claimsLoading"
+          :paginator="true"
+          :rows="10"
+          :totalRecords="claimsTotal"
+          :rowsPerPageOptions="[10, 20, 50]"
+          :lazy="true"
+          @page="onClaimPageChange"
+          responsiveLayout="scroll"
+          selectionMode="single"
+          :selection="selectedClaim"
+        >
+          <Column field="id_klaim" header="ID Klaim" style="width: 8rem">
+            <template #body="slotProps">
+              <span class="font-mono text-sm">{{ slotProps.data.id_klaim }}</span>
+            </template>
+          </Column>
+          <Column field="id_rekam" header="No. RM" style="width: 8rem">
+            <template #body="slotProps">
+              <span class="font-mono text-sm">{{ slotProps.data.id_rekam }}</span>
+            </template>
+          </Column>
+          <Column field="pasien_nama" header="Pasien" style="width: 14rem">
+            <template #body="slotProps">
+              <span class="text-sm">{{ slotProps.data.pasien_nama }}</span>
+            </template>
+          </Column>
+          <Column field="kode_cbgs" header="Kode CBGs" style="width: 8rem">
+            <template #body="slotProps">
+              <span class="font-mono text-sm">{{ slotProps.data.kode_cbgs }}</span>
+            </template>
+          </Column>
+          <Column field="status_klaim" header="Status" style="width: 9rem">
+            <template #body="slotProps">
+              <StatusBadge :status="slotProps.data.status_klaim" type="claim" />
+            </template>
+          </Column>
+          <Column field="nominal_klaim" header="Nominal" style="width: 10rem">
               <template #body="slotProps">
                 <span class="font-mono text-sm text-right">{{ formatNumber(slotProps.data.nominal_klaim) }}</span>
               </template>
@@ -417,18 +422,17 @@
       </div>
 
       <Toast />
-    </main>
-  </div>
+  </DefaultLayout>
 </template>
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useAuthStore } from '../stores/auth'
 import { useAdminStore } from '../stores/adminStore'
 import client from '../api/client'
 
+import DefaultLayout from '../layouts/DefaultLayout.vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
@@ -442,7 +446,6 @@ import UserFormModal from '../components/UserFormModal.vue'
 import UnitFormModal from '../components/UnitFormModal.vue'
 import DeleteConfirm from '../components/DeleteConfirm.vue'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const adminStore = useAdminStore()
 const toast = useToast()
@@ -885,10 +888,5 @@ function formatDateForApi(date) {
   if (!date) return ''
   const d = new Date(date)
   return d.toISOString().split('T')[0]
-}
-
-async function handleLogout() {
-  await authStore.logout()
-  router.push('/login')
 }
 </script>

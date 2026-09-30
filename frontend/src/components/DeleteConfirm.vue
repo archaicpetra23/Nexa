@@ -1,9 +1,9 @@
 <template>
   <Dialog v-model:visible="visible" modal :header="title" :style="{ width: '28rem' }">
-    <p class="text-sm text-secondary">{{ message }}</p>
+    <p class="text-sm" style="color: var(--color-text-secondary)">{{ message }}</p>
     <template #footer>
-      <Button label="Batal" severity="secondary" text @click="visible = false" />
-      <Button label="Hapus" severity="danger" @click="confirm" />
+      <Button label="Batal" severity="secondary" text @click="visible = false" class="text-sm" />
+      <Button label="Hapus" @click="confirm" class="text-sm" :style="{ backgroundColor: '#B54245' }" />
     </template>
   </Dialog>
 </template>
