@@ -24,7 +24,7 @@ type User struct {
 	CreatedAt    time.Time  `gorm:"default:now();column:created_at" json:"created_at"`
 	UpdatedAt    time.Time  `gorm:"default:now();column:updated_at" json:"updated_at"`
 	DeletedAt    *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
-	Role         *Role      `gorm:"foreignKey:IDRole" json:"role,omitempty"`
+	Role         *Role      `gorm:"foreignKey:IDRole;references:IDRole" json:"role,omitempty"`
 }
 
 func (User) TableName() string {

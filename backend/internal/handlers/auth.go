@@ -37,7 +37,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := pkg.GenerateToken(user.IDUser, user.Role.NamaRole, h.JWTSecret)
+	roleName := ""
+	if user.Role != nil {
+		roleName = user.Role.NamaRole
+	} else if user.IDRole > 0 {
+		var role models.Role
+		if err := h.DB.First(&role, user.IDRole).Error; err == nil {
+			roleName = role.NamaRole
+		}
+	}
+
+	token, err := pkg.GenerateToken(user.IDUser, roleName, h.JWTSecret)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "message": "Token generation failed"})
 		return
@@ -55,7 +65,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 				"nama":     user.Nama,
 				"username": user.Username,
 				"profesi":  user.Profesi,
-				"role":     user.Role.NamaRole,
+				"role":     roleName,
 			},
 		},
 	})
@@ -70,6 +80,17 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
+	// BUG-001 FIX: guard nil Role pointer with fallback
+	roleName := ""
+	if user.Role != nil {
+		roleName = user.Role.NamaRole
+	} else if user.IDRole > 0 {
+		var role models.Role
+		if err := h.DB.First(&role, user.IDRole).Error; err == nil {
+			roleName = role.NamaRole
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -77,7 +98,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 			"nama":     user.Nama,
 			"username": user.Username,
 			"profesi":  user.Profesi,
-			"role":     user.Role.NamaRole,
+			"role":     roleName,
 		},
 	})
 }

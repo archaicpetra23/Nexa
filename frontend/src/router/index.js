@@ -1,9 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import LandingView from '../views/LandingView.vue'
 import LoginView from '../views/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
+import AdminView from '../views/AdminView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
+  {
+    path: '/',
+    name: 'landing',
+    component: LandingView
+  },
   {
     path: '/login',
     name: 'login',
@@ -16,8 +23,10 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/',
-    redirect: '/login'
+    path: '/admin',
+    name: 'admin',
+    component: AdminView,
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -36,6 +45,8 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else if (to.path === '/login' && authStore.isAuthenticated) {
+    next('/dashboard')
+  } else if (to.meta.requiresAdmin && (!authStore.isAuthenticated || authStore.user?.role !== 'admin_ti')) {
     next('/dashboard')
   } else {
     next()

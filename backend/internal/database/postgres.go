@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"nexa/backend/internal/model"
 	"nexa/backend/internal/models"
 	"nexa/backend/pkg"
 
@@ -15,7 +16,12 @@ func Connect(dsn string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&models.Role{}, &models.Unit{}, &models.User{}, &models.Session{}); err != nil {
+	if err := db.AutoMigrate(
+		&models.Role{}, &models.Unit{}, &models.User{}, &models.Session{},
+		&model.Pasien{}, &model.RekamMedis{}, &model.Diagnosis{}, &model.RekamDiagnosis{},
+		&model.Tindakan{}, &model.DetailTindakan{}, &model.TarifCBGs{},
+		&model.Klaim{}, &model.LogAktivitas{},
+	); err != nil {
 		return nil, err
 	}
 
