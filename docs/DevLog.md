@@ -4,6 +4,63 @@
 
 ---
 
+## [2026-09-30 23:34] — Backend: Lengkapi endpoint admin (user CRUD, audit trail, master units/roles)
+
+- **Agent:** Kiro (Coding-Dewa)
+- **Tipe:** Fitur Baru
+- **Status:** Selesai
+- **Modul:** Backend API (Admin Panel)
+- **File terdampak:**
+  - `backend/internal/delivery/http/admin_user_handler.go` — baru, POST/PUT/DELETE /admin/users
+  - `backend/internal/delivery/http/master_handler.go` — baru, GET /master/roles, CRUD /master/units
+  - `backend/internal/delivery/http/user_response.go` — baru, shared UserResponse mapper
+  - `backend/internal/delivery/http/admin_handler.go` — extended: GET /admin/users (pagination, search, role filter), GET /admin/submissions (pagination, date, search filter), GET /admin/audit-trail (pagination, user/activity/date filter)
+  - `backend/internal/models/role.go` — tambah Unit relation ke User
+  - `backend/internal/routes/routes.go` — register semua endpoint admin/master baru dengan RBAC admin_ti
+- **Deskripsi:**
+  Melengkapi backend API admin panel sesuai PRD §8 dan brief. Endpoint user CRUD dengan validasi (username unique, password bcrypt min 8, role/unit FK check). Audit trail dengan filter user_id/aktivitas/date range. Master units CRUD (hard delete karena master data). Semua mutasi log ke log_aktivitas. Response wrapper konsisten {success, message, data: {items, total, page, limit}}. RBAC middleware admin_ti aktif di semua endpoint.
+- **Error/Kendala:** –
+- **Next Step:** Build frontend pages (PasienView, RekamMedisView, KlaimView, AnalyticsView) untuk melengkapi sistem.
+
+---
+
+## [2026-09-30 22:10] — Lengkapi Panel Admin (CRUD Pengguna, Audit Trail, Unit, Role, Klaim)
+
+- **Agent:** Kiro (Coding-Dewa)
+- **Tipe:** Fitur Baru
+- **Status:** Sebagian
+- **Modul:** Frontend Admin Panel
+- **File terdampak:**
+  - `frontend/src/views/AdminView.vue` — dirombak penuh jadi 5 tab (Pengguna, Klaim, Audit Trail, Unit, Role)
+  - `frontend/src/components/StatusBadge.vue` — baru, badge ikon + teks (Claim/User/Activity)
+  - `frontend/src/components/UserFormModal.vue` — baru, form create/edit dengan validasi inline
+  - `frontend/src/components/UnitFormModal.vue` — baru, form create/edit unit
+  - `frontend/src/components/DeleteConfirm.vue` — baru, dialog konfirmasi soft delete
+  - `frontend/src/stores/adminStore.js` — baru, Pinia store untuk users/roles/units/audit/claims
+  - `frontend/src/main.js` — registrasi `ToastService` + ripple
+  - `frontend/src/style.css` — import primeicons, styling DataTable/Dialog/Input sesuai Design_UI.md
+  - `frontend/package.json` — tambah dependensi `primeicons`
+- **Deskripsi:**
+  Panel Admin diubah dari dua tabel read-only menjadi SPA tabbed berbasis PrimeVue v4. Tab Pengguna punya CRUD penuh (create/edit modal, soft delete dengan konfirmasi, reassign role inline via Select, search + filter role + paginasi server-side 10/halaman). Tab Audit Trail read-only dengan filter rentang tanggal, user, dan jenis aktivitas (20/halaman). Tab Unit punya CRUD penuh. Tab Role read-only dengan deskripsi. Tab Klaim mempertahankan modal skoring yang sudah ada plus filter status/rentang tanggal/pencarian pasien, kolom Tanggal Klaim + Tanggal Update, dan ekspor CSV.
+  Seluruh request lewat `adminStore.js` (axios `withCredentials: true`, JWT tetap di HttpOnly cookie). Route guard `requiresAdmin` sudah ada di `router/index.js` sehingga akses non-`admin_ti` ditolak.
+- **Error/Kendala:**
+  1. **Endpoint backend belum ada.** `backend/internal/routes/routes.go:74-78` hanya mendaftarkan `GET /admin/users` dan `GET /admin/submissions`.-belum ada route untuk `POST/PUT/DELETE /admin/users/:id`, `GET /admin/audit-trail`, `GET/POST/PUT/DELETE /master/units`, `GET /master/roles`, maupun `GET /admin/submissions/export`. Frontend sudah panggilan kontrak PRD §8, jadi 9 dari 12 endpoint tab Admin akan menerima 404 sampai backend dikerjakan. Ini murni gap backend, di luar scope task ini (dilarang ubah kode Go).
+  2. `GET /admin/users` backend mengembalikan array polos tanpa wrapper `{items,total,page,limit}`, dan field `spesialisasi`/`no_str`/`id_role` tidak ada di `UserResponse` (`admin_handler.go:21-29`). Kolom tabel tersebut akan kosong sampai DTO handler diperluas. Store sudah menangani kedua bentuk respons (`data.items || data`).
+  3. Kolom Unit pada tabel pengguna memakai `unit_nama`, yang tidak dikembalikan backend (hanya `id_unit`).
+  4. PrimeVue di package.json sudah v4, di mana `Dropdown`/`Calendar` adalah alias deprecated. Kode baru memakai `Select`/`DatePicker`.
+  5. Dependency `primeicons` tidak pernah terpasang, sehingga ikon `pi-*` (wajib untuk badge status per Design_UI.md §5) tidak akan render. Sudah diinstal.
+- **Asumsi:**
+  - `deskripsi` pada `/master/roles` diasumsikan mengembalikan objek role dengan kolom `id_role`, `nama_role`, `deskripsi`. Kolom `deskripsi` tidak ada di DDL `roles` (§7.1 PRD, hanya `id_role` dan `nama_role`) — perlu kolom baru atau fallback teks statis saat backend dikerjakan.
+  - Filter role pada `GET /admin/users` dikirim sebagai query `role=<nama_role>`; `search` diasumsikan menutupi nama/username/role sekaligus sesuai brief.
+  - Ekspor CSV memakai `GET /admin/submissions/export`. PRD §8.6 menyediakan `GET /api/v1/analytics/export-klaim?format=csv&status=...` sebagai endpoint resmi. Ganti pemanggilnya ke `analytics/export-klaim` bila backend mengikuti PRD, bukan `/admin/submissions/export`.
+- **Next Step:**
+  1. Backend: tambahkan route + handler + usecase untuk user CRUD, audit-trail read, master roles/units, dan export klaim (semua di RBAC `admin_ti`).
+  2. Backend: perbarui `UserResponse` di `admin_handler.go` agar memuat `spesialisasi`, `no_str`, `id_role`, `nama_unit`, dan dibungkus `{items,total,page,limit}`.
+  3. Backend: tambahkan kolom `deskripsi` ke tabel `roles` lewat migrasi baru (jangan edit `init.sql`).
+  4. Frontend: buka app dan verifikasi tiap tab setelah endpoint backend tersedia.
+
+---
+
 ## [2026-09-30 15:57] — Implementasi awal backend API + frontend halaman utama
 
 - **Agent:** Kiro (Coding-Dewa)

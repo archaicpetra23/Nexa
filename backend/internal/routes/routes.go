@@ -31,6 +31,8 @@ func Setup(r *gin.Engine, db *gorm.DB, jwtSecret string) {
 	klaimHandler := delivery.NewKlaimHandler(klaimUC)
 
 	adminHandler := delivery.NewAdminHandler(db)
+	adminUserHandler := delivery.NewAdminUserHandler(db)
+	masterHandler := delivery.NewMasterHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -74,7 +76,20 @@ func Setup(r *gin.Engine, db *gorm.DB, jwtSecret string) {
 		admin := api.Group("/admin", authMw, middleware.RBACMiddleware("admin_ti"))
 		{
 			admin.GET("/users", adminHandler.GetUsers)
+			admin.POST("/users", adminUserHandler.CreateUser)
+			admin.PUT("/users/:id", adminUserHandler.UpdateUser)
+			admin.DELETE("/users/:id", adminUserHandler.DeleteUser)
+			admin.GET("/audit-trail", adminHandler.GetAuditTrail)
 			admin.GET("/submissions", adminHandler.GetSubmissions)
+		}
+
+		master := api.Group("/master", authMw)
+		{
+			master.GET("/roles", masterHandler.GetRoles)
+			master.GET("/units", masterHandler.GetUnits)
+			master.POST("/units", middleware.RBACMiddleware("admin_ti"), masterHandler.CreateUnit)
+			master.PUT("/units/:id", middleware.RBACMiddleware("admin_ti"), masterHandler.UpdateUnit)
+			master.DELETE("/units/:id", middleware.RBACMiddleware("admin_ti"), masterHandler.DeleteUnit)
 		}
 	}
 

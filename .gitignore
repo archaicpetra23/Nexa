@@ -32,3 +32,4 @@ tmp/
 *.exe
 *.test
 *.out
+/backend/server
