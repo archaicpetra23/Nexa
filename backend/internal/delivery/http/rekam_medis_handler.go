@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,12 +21,12 @@ func NewRekamMedisHandler(uc usecase.RekamMedisUsecase) *RekamMedisHandler {
 }
 
 type CreateRekamRequest struct {
-	IDPasien        uint    `json:"id_pasien" binding:"required"`
-	IDDokter        uint    `json:"id_dokter" binding:"required"`
-	JenisPerawatan  string  `json:"jenis_perawatan" binding:"required,oneof=rawat_jalan rawat_inap"`
-	Keluhan         string  `json:"keluhan" binding:"required"`
-	Catatan         *string `json:"catatan"`
-	TanggalPulang   *string `json:"tanggal_pulang"`
+	IDPasien       uint    `json:"id_pasien" binding:"required"`
+	IDDokter       uint    `json:"id_dokter" binding:"required"`
+	JenisPerawatan string  `json:"jenis_perawatan" binding:"required,oneof=rawat_jalan rawat_inap"`
+	Keluhan        string  `json:"keluhan" binding:"required"`
+	Catatan        *string `json:"catatan"`
+	TanggalPulang  *string `json:"tanggal_pulang"`
 }
 
 type AddDiagnosisRequest struct {
@@ -212,5 +213,111 @@ func (h *RekamMedisHandler) AddTindakan(c *gin.Context) {
 		"success": true,
 		"message": "Tindakan berhasil ditambahkan",
 		"data":    tindakan,
+	})
+}
+
+// UpdateRekam handles PUT /api/v1/rekam-medis/:id
+func (h *RekamMedisHandler) UpdateRekam(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	role := c.GetString("role")
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+
+	var req CreateRekamRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Data rekam medis tidak valid",
+			"data":    nil,
+		})
+		return
+	}
+
+	rekam := &model.RekamMedis{
+		IDRekam:        uint(id),
+		IDPasien:       req.IDPasien,
+		IDDokter:       req.IDDokter,
+		JenisPerawatan: req.JenisPerawatan,
+		Keluhan:        req.Keluhan,
+		Catatan:        req.Catatan,
+	}
+
+	if req.TanggalPulang != nil {
+		var t time.Time
+		if err := parseDate(*req.TanggalPulang, &t); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "Format tanggal_pulang harus YYYY-MM-DD",
+				"data":    nil,
+			})
+			return
+		}
+		rekam.TanggalPulang = &t
+	}
+
+	if err := h.usecase.UpdateRekamMedis(rekam, userID, role); err != nil {
+		switch {
+		case errors.Is(err, usecase.ErrRekamNotFound):
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": "Rekam medis tidak ditemukan",
+				"data":    nil,
+			})
+		case errors.Is(err, usecase.ErrRekamUnauthorized):
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"message": "Tidak memiliki akses ke rekam medis ini",
+				"data":    nil,
+			})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "Gagal menyimpan rekam medis",
+				"data":    nil,
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Rekam medis berhasil diperbarui",
+		"data":    rekam,
+	})
+}
+
+// DeleteRekam handles DELETE /api/v1/rekam-medis/:id
+func (h *RekamMedisHandler) DeleteRekam(c *gin.Context) {
+	userID := c.GetUint("user_id")
+	role := c.GetString("role")
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+
+	if err := h.usecase.DeleteRekamMedis(uint(id), userID, role); err != nil {
+		switch {
+		case errors.Is(err, usecase.ErrRekamNotFound):
+			c.JSON(http.StatusNotFound, gin.H{
+				"success": false,
+				"message": "Rekam medis tidak ditemukan",
+				"data":    nil,
+			})
+		case errors.Is(err, usecase.ErrRekamUnauthorized):
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"message": "Tidak memiliki akses ke rekam medis ini",
+				"data":    nil,
+			})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "Gagal menghapus rekam medis",
+				"data":    nil,
+			})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Rekam medis berhasil dihapus",
+		"data":    nil,
 	})
 }

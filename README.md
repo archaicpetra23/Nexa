@@ -341,27 +341,33 @@ pkill -f "vite"
 
 ## Fitur Inti
 
-1. **Autentikasi & RBAC Multi-Role** — sesi aman JWT via _HttpOnly Cookie_
-2. **Manajemen Pasien** — CRUD + validasi NIK (16 digit), No BPJS (13 digit)
-3. **Rekam Medis Kunjungan** — rawat jalan/inap + kalkulasi _Length of Stay_
-4. **Pencarian Cepat ICD** — autocomplete _fuzzy search_ < 300ms (indeks trigram)
-5. **Engine Rekomendasi INA-CBGs** — pemetaan paket tarif otomatis
-6. **Siklus Klaim (State Machine)** — `draft` → `pending` → `disetujui`/`ditolak`
-7. **Dasbor Analitik** — Top 10 ICD-10 + metrik status klaim _real-time_
-8. **Audit Trail** — pencatatan otomatis seluruh mutasi data klinis
+Status ditandai jujur: **[Ada]** = sudah terimplementasi di kode, **[Rencana]** = masih di PRD.
+
+1. **[Ada] Autentikasi & RBAC Multi-Role** — sesi JWT via _HttpOnly Cookie_, 7 role, menu mengikuti role
+2. **[Ada] Manajemen Pasien** — CRUD + validasi NIK (16 digit), No BPJS (13 digit)
+3. **[Ada] Rekam Medis Kunjungan** — rawat jalan/inap, diagnosis ICD-10, tindakan ICD-9 CM
+4. **[Rencana] Master Data Klinis** — tabel ICD-10, ICD-9 CM, dan tarif INA-CBGs sudah ada di database, endpoint API-nya belum dibuat
+5. **[Ada] Siklus Klaim (State Machine)** — `draft` → `pending` → `disetujui`/`ditolak`, alasan wajib saat pending/tolak
+6. **[Ada] Manajemen Pengguna & Unit** — panel admin, soft delete, reset akses per role
+7. **[Ada] Audit Trail (terbatas)** — tercatat untuk mutasi `users` dan `units`
+8. **[Rencana] Dasbor Analitik** — Top 10 ICD-10 + metrik status klaim
+9. **[Rencana] Engine Rekomendasi INA-CBGs** — pemetaan paket tarif otomatis
+10. **[Rencana] Kalkulasi Length of Stay** — otomatis dari tanggal kunjungan & pulang
 
 ## Keamanan
 
-- OWASP Top 10 compliant
 - Autentikasi JWT via _HttpOnly_, _Secure_, _SameSite=Lax_ cookie
 - RBAC middleware + mitigasi IDOR/BOLA
-- _Rate limiter_ login (5 percobaan/menit/IP)
 - _Soft delete_ + _ACID transaction_ PostgreSQL
+- Password bcrypt cost 12
+- `.env` tidak di-commit, `.env.example` hanya placeholder
 
 ## Target Keberhasilan
 
-- Pencarian berkas: **< 5 detik** (optimal < 1 detik)
-- Duplikasi kode medis: **0%**
-- Efisiensi koding Casemix: **terpangkas >= 50%**
-- Transparansi dispute: **100%** berkas pending/tolak tercatat alasan
-- Audit trail: **100%** aksi mutasi tercatat di `log_aktivitas`
+Target berikut adalah sasaran produk, bukan hasil pengukuran. Yang sudah terpenuhi ditandai.
+
+- Pencarian berkas: **< 5 detik** (belum diukur)
+- Duplikasi kode medis: **0%** (validasi master data tersedia)
+- Efisiensi koding Casemix: **terpangkas >= 50%** (belum diukur)
+- Transparansi dispute: **100%** berkas pending/tolak tercatat alasan — **terpenuhi** (validasi wajib di API)
+- Audit trail: tercatat untuk `users` dan `units`; tabel transaksional belum dicatat
