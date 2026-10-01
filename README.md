@@ -4,94 +4,216 @@
 
 ## Tech Stack
 
-- **Backend:** Go 1.22+ (Gin Gonic, GORM), PostgreSQL 16
+- **Backend:** Go 1.25 (Gin Gonic, GORM), PostgreSQL 16
 - **Frontend:** Vue 3 (Composition API, Vite, PrimeVue, Tailwind CSS, Pinia)
 - **Arsitektur:** Decoupled Monorepo, RESTful API, JWT + RBAC
 
 ---
 
-## Quick Start (Docker)
+## Prerequisites
 
-### 1. Install Docker
+Sebelum mulai, pastikan hal berikut sudah terpenuhi:
 
-Download & install Docker Desktop sesuai OS masing-masing:
+| Kebutuhan             | Keterangan                                                                   |
+| :-------------------- | :--------------------------------------------------------------------------- |
+| **Docker Desktop**    | Windows / macOS / Linux. Untuk Windows wajib mengaktifkan backend **WSL 2**. |
+| **Docker Compose v2** | Sudah termasuk di Docker Desktop. Cek dengan `docker compose version`.       |
+| **Port bebas**        | Port `5432`, `8080`, dan `5173` tidak dipakai aplikasi lain.                 |
+| **Koneksi internet**  | Diperlukan saat build pertama (download image + dependency).                 |
 
-- **[www.docker.com](https://www.docker.com)** (Windows, macOS, Linux)
+> **Catatan untuk pengguna Windows:** seluruh perintah di panduan ini dijalankan di **PowerShell** atau **Git Bash**. Kalau memakai CMD, perintah `cp` diganti `copy`.
 
-Pastikan Docker running sebelum lanjut ke langkah berikutnya.
+---
 
-### 2. Build & Run
+## Quick Start (Docker) — Cara Termudah & Disarankan
+
+Cara ini **tidak perlu** install Go, Node.js, atau PostgreSQL secara manual. Semua sudah dibungkus di dalam Docker.
+
+### 1. Masuk ke Folder Project
 
 ```bash
-# Build semua image + start containers
+cd "Nexa"
+```
+
+### 2. Buat File `.env`
+
+File `.env` menyimpan konfigurasi database dan keamanan. Template-nya sudah tersedia di `.env.example`.
+
+```bash
+cp .env.example .env
+```
+
+Lalu buka `.env` dan isi nilainya:
+
+```dotenv
+# PostgreSQL
+POSTGRES_USER=nexa
+POSTGRES_PASSWORD=nexa123
+POSTGRES_DB=nexa
+
+# Backend
+JWT_SECRET=GANTI_DENGAN_HASIL_OPENSSL
+COOKIE_DOMAIN=localhost
+COOKIE_SECURE=false
+SERVER_PORT=:8080
+```
+
+**Generate `JWT_SECRET`** (wajib, minimal 32 karakter):
+
+```bash
+# Linux / macOS / Git Bash
+openssl rand -base64 32
+```
+
+```powershell
+# Windows PowerShell
+$b = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
+[Convert]::ToBase64String($b)
+```
+
+Copy hasilnya ke baris `JWT_SECRET=` pada file `.env`.
+
+> **Penting:** jangan pakai `echo "JWT_SECRET=..." > .env`. Tanda `>` akan **menimpa seluruh isi** `.env` dan menghapus `POSTGRES_*`. Kalau mau menambah lewat terminal, pakai `>>` (append) atau edit manual dengan text editor.
+
+### 3. Build & Run
+
+```bash
+# Build semua image + start containers di background
 docker compose up --build -d
 ```
 
-Service yang jalan:
-| Service | Port | Fungsi |
-|---------|------|--------|
-| PostgreSQL | 5432 | Database |
-| Backend | 8080 | API |
-| Frontend | 5173 | UI |
+> **Build pertama memakan waktu 3–10 menit** (download image Go & Node, `go mod download`, `npm install`). Ini normal. Build berikutnya jauh lebih cepat karena cache.
 
-### 3. Generate JWT Secret (Opsional)
+### 4. Verifikasi Semua Service Jalan
 
-Generate secret random dan set di environment:
+Tunggu ±30 detik setelah build selesai, lalu cek:
+
 ```bash
-# Buat file .env di root project
-echo "JWT_SECRET=$(openssl rand -base64 32)" > .env
-
-# Restart backend pakai secret baru
-docker compose up -d backend
+docker compose ps
 ```
 
-### 4. Akses Aplikasi
+Semua service harus berstatus **`Up`** (dan `postgres` harus **`Up (healthy)`**):
+
+```
+NAME              SERVICE    STATUS
+nexa-postgres-1   postgres   Up (healthy)   0.0.0.0:5432->5432/tcp
+nexa-backend-1    backend    Up             0.0.0.0:8080->8080/tcp
+nexa-frontend-1   frontend   Up             0.0.0.0:5173->5173/tcp
+```
+
+Cek health endpoint backend:
 
 ```bash
-# Buka browser
+curl http://localhost:8080/health
+```
+
+Harus membalas:
+
+```json
+{ "message": "Nexa API running", "success": true }
+```
+
+> Kalau ada service yang **`Exit`** atau **`Restarting`**, cek log-nya: `docker compose logs backend` (atau ganti `backend` dengan nama service lain).
+
+### 5. Akses Aplikasi & Login
+
+Buka browser:
+
+```
 http://localhost:5173
 ```
 
-### 5. Stop & Cleanup
+Saat pertama kali dijalankan, backend **otomatis membuat tabel database (auto-migrate)** dan **otomatis mengisi akun demo (auto-seed)**. Jadi kamu bisa langsung login tanpa setup database manual.
+
+**Akun demo yang tersedia** — password semuanya `password123`:
+
+| Username    | Role              | Password      |
+| :---------- | :---------------- | :------------ |
+| `admin`     | `admin_ti`        | `password123` |
+| `petugas`   | `petugas_rm`      | `password123` |
+| `dokter`    | `dokter_dpjp`     | `password123` |
+| `perawat`   | `perawat`         | `password123` |
+| `casemix`   | `petugas_casemix` | `password123` |
+| `keuangan`  | `keuangan`        | `password123` |
+| `manajemen` | `manajemen`       | `password123` |
+
+> Gunakan akun `admin` untuk akses penuh, dan akun lain untuk mencoba pembatasan hak akses (RBAC) per role.
+
+### 6. Stop & Cleanup
 
 ```bash
-# Stop semua service
+# Stop semua service (data database TETAP tersimpan)
 docker compose down
 
-# Stop + hapus volume (⚠️ data DB hilang)
+# Stop + hapus volume (⚠️ data DB dan akun akan hilang, akan di-seed ulang saat start)
 docker compose down -v
 ```
 
 ---
 
-## Quick Start (Local)
+## Troubleshooting
+
+| Masalah                             | Penyebab                                         | Solusi                                                                                        |
+| :---------------------------------- | :----------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| `port is already allocated`         | Port 5432/8080/5173 dipakai proses lain          | Matikan aplikasi tersebut, atau ubah port kiri di `docker-compose.yml` (contoh `"5433:5432"`) |
+| `FATAL: DB_DSN not set in .env`     | File `.env` belum dibuat / kosong                | Ulangi langkah 2                                                                              |
+| `FATAL: JWT_SECRET not set in .env` | `JWT_SECRET` masih kosong atau masih placeholder | Isi dengan hasil `openssl rand -base64 32`                                                    |
+| Backend `Restarting` terus          | Kredensial Postgres tidak cocok                  | Cek `POSTGRES_*` di `.env`, lalu `docker compose down -v && docker compose up --build -d`     |
+| Halaman blank / `Failed to fetch`   | Frontend belum selesai `npm install`             | Tunggu 1–2 menit, cek `docker compose logs -f frontend`                                       |
+| Perubahan kode tidak muncul         | Vite cache                                       | `docker compose restart frontend`                                                             |
+| Tidak bisa login                    | Database belum ter-seed                          | `docker compose down -v && docker compose up --build -d`                                      |
+
+---
+
+## Struktur Project
+
+```
+Nexa/
+├── backend/              # API Go (Gin + GORM)
+│   ├── cmd/server/       # Entry point server
+│   ├── cmd/seed/         # Seeder opsional
+│   ├── internal/         # config, database, model, routes, handler
+│   └── scripts/          # SQL schema referensi
+├── frontend/             # SPA Vue 3 + Vite
+│   └── src/              # views, components, stores, layouts
+├── docs/                 # PRD, Coding Style, DevLog, Agent.md
+├── docker-compose.yml    # Orkestrasi postgres + backend + frontend
+├── .env.example          # Template konfigurasi
+└── README.md
+```
+
+---
+
+## Quick Start (Local) — Tanpa Docker
+
+Untuk development yang butuh hot-reload lebih cepat atau debugging langsung. **Lewati bagian ini kalau sudah berhasil pakai Docker.**
 
 ### 1. Install Dependencies
 
-**Windows:**
-- **Go 1.22+**: [https://go.dev/dl/](https://go.dev/dl/)
+**Windows** — install manual:
+
+- **Go 1.25+**: [https://go.dev/dl/](https://go.dev/dl/)
 - **PostgreSQL 16**: [https://www.postgresql.org/download/windows/](https://www.postgresql.org/download/windows/)
 - **Node.js 18+**: [https://nodejs.org/](https://nodejs.org/)
 
 Atau pakai Chocolatey:
+
 ```powershell
 choco install go postgresql nodejs
 ```
 
 **Ubuntu / Debian:**
+
 ```bash
 sudo apt update
-sudo apt install -y golang-1.22 postgresql-16 nodejs npm
+sudo apt install -y golang postgresql nodejs npm
 ```
 
-Atau install manual:
-- **Go 1.22+**: [https://go.dev/dl/](https://go.dev/dl/)
-- **PostgreSQL 16**: [https://www.postgresql.org/download/linux/ubuntu/](https://www.postgresql.org/download/linux/ubuntu/)
-- **Node.js 18+**: [https://nodejs.org/](https://nodejs.org/)
-
 Verify:
+
 ```bash
-go version          # minimal 1.22
+go version          # minimal 1.25
 psql --version      # minimal 16
 node --version      # minimal 18
 ```
@@ -99,10 +221,12 @@ node --version      # minimal 18
 ### 2. Start PostgreSQL Service
 
 **Windows:**
+
 - PostgreSQL otomatis jalan sebagai service setelah install
 - Atau buka **pgAdmin** → connect ke postgres
 
 **Ubuntu / Debian:**
+
 ```bash
 sudo systemctl enable --now postgresql
 sudo -u postgres createuser --superuser $USER
@@ -119,12 +243,14 @@ cp .env.example .env
 ```
 
 Generate JWT secret:
+
 ```bash
 openssl rand -base64 32
 ```
 
-Edit `.env`:
-```
+Edit `backend/.env`:
+
+```dotenv
 DB_DSN="host=localhost user=postgres password=YOUR_PASSWORD dbname=nexa port=5432 sslmode=disable"
 JWT_SECRET="OUTPUT_DARI_OPENSSL"
 SERVER_PORT=":8080"
@@ -133,12 +259,13 @@ COOKIE_SECURE="false"
 ```
 
 Jalankan:
+
 ```bash
-cd backend
 go mod tidy
 go run cmd/server/main.go
 ```
-→ Backend jalan di `http://localhost:8080`
+
+→ Backend jalan di `http://localhost:8080`. Tabel dan akun demo otomatis dibuat saat start pertama.
 
 ### 4. Setup Frontend
 
@@ -147,7 +274,10 @@ cd frontend
 npm install
 npm run dev
 ```
+
 → Frontend jalan di `http://localhost:5173`
+
+> Saat mode local, Vite mem-proxy `/api` ke `http://backend:8080` (nama host Docker). Untuk menjalankan tanpa Docker, ubah target proxy di `frontend/vite.config.js` menjadi `http://localhost:8080`.
 
 ### 5. Stop Services
 
@@ -165,6 +295,7 @@ pkill -f "vite"
 - JWT secret harus random min 32 byte: `openssl rand -base64 32`
 - Cookie: `HttpOnly`, `SameSite=Lax`, `Secure=false` (local only)
 - bcrypt cost: 12
+- **Akun demo di atas hanya untuk keperluan development/demo.** Untuk production, ganti seluruh password dan hapus seeder akun demo.
 
 ---
 
@@ -185,6 +316,7 @@ pkill -f "vite"
 | :--------------------------------------------- | :---------------------------------------------------------------------------------- |
 | [`docs/Agent.md`](docs/Agent.md)               | Panduan perilaku AI coding agent (main rules, alur kerja per task, larangan khusus) |
 | [`docs/Coding_Style.md`](docs/Coding_Style.md) | Standar gaya penulisan kode Backend (Go/Gin/GORM) & Frontend (Vue 3/PrimeVue/Pinia) |
+| [`docs/Design_UI.md`](docs/Design_UI.md)       | Panduan desain antarmuka dan komponen UI                                            |
 | [`docs/Logging.md`](docs/Logging.md)           | Konvensi dev log — aturan pencatatan pekerjaan ke `DEVLOG.md`                       |
 | [`docs/DevLog.md`](docs/DevLog.md)             | Dev log kronologis — riwayat fitur, fix, refactor, dan error yang masih terbuka     |
 
@@ -233,14 +365,3 @@ pkill -f "vite"
 - Efisiensi koding Casemix: **terpangkas >= 50%**
 - Transparansi dispute: **100%** berkas pending/tolak tercatat alasan
 - Audit trail: **100%** aksi mutasi tercatat di `log_aktivitas`
-
-## Development Roadmap
-
-| Sprint          | Fokus                                  |
-| :-------------- | :------------------------------------- |
-| 1 (Pekan 1-2)   | Environment Setup & Database Modeling  |
-| 2 (Pekan 3-4)   | Core Backend & Identity Management     |
-| 3 (Pekan 5-6)   | Rekam Medis & Pencarian Kode Klinis    |
-| 4 (Pekan 7-8)   | Logika Casemix & Engine Klaim          |
-| 5 (Pekan 9-10)  | Frontend Development & API Integration |
-| 6 (Pekan 11-12) | Testing, Security Hardening & Handover |
