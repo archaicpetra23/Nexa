@@ -1,79 +1,149 @@
 <template>
-  <Dialog v-model:visible="visible" modal :header="title" :style="{ width: '36rem' }">
-    <div class="space-y-4">
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
-            Username <span style="color: #B54245">*</span>
-          </label>
-          <InputText v-model="form.username" class="w-full text-sm" placeholder="Username" />
-          <small v-if="errors.username" class="text-xs" style="color: #B54245">{{ errors.username }}</small>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
-            Password <span v-if="!isEdit" style="color: #B54245">*</span>
-          </label>
-          <InputText v-model="form.password" type="password" class="w-full text-sm" :placeholder="isEdit ? 'Kosongkan jika tidak diubah' : 'Password'" />
-          <small v-if="errors.password" class="text-xs" style="color: #B54245">{{ errors.password }}</small>
-        </div>
-      </div>
-
+  <Dialog
+    :visible="show"
+    modal
+    :header="title"
+    :closable="!saving"
+    :closeOnEscape="!saving"
+    :dismissableMask="!saving"
+    :style="{ width: 'min(48rem, calc(100vw - 2rem))' }"
+    :pt="{
+      root: { style: { backgroundColor: '#FFFFFF', border: '1px solid var(--color-border)', borderRadius: '12px' } },
+      mask: { style: { backgroundColor: 'rgba(15, 23, 42, 0.48)' } },
+      content: { style: { backgroundColor: '#FFFFFF' } }
+    }"
+    @update:visible="emit('update:show', $event)"
+  >
+    <template #header>
       <div>
-        <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
-          Nama <span style="color: #B54245">*</span>
-        </label>
-        <InputText v-model="form.nama" class="w-full text-sm" placeholder="Nama lengkap" />
-        <small v-if="errors.nama" class="text-xs" style="color: #B54245">{{ errors.nama }}</small>
+        <h3 class="text-lg font-semibold" style="color: var(--color-primary)">{{ title }}</h3>
+        <p class="mt-1 text-sm text-secondary">
+          {{ isEdit ? 'Perbarui informasi akun dan penempatan pengguna.' : 'Lengkapi informasi untuk membuat akun pengguna baru.' }}
+        </p>
       </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
-            Profesi <span style="color: #B54245">*</span>
-          </label>
-          <Select v-model="form.profesi" :options="profesiOptions" optionLabel="label" optionValue="value" placeholder="Pilih profesi" class="w-full text-sm" />
-          <small v-if="errors.profesi" class="text-xs" style="color: #B54245">{{ errors.profesi }}</small>
-        </div>
-        <div v-if="form.profesi === 'Dokter'">
-          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">Spesialisasi</label>
-          <InputText v-model="form.spesialisasi" class="w-full text-sm" placeholder="Spesialisasi" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
-          No. STR <span style="color: #B54245">*</span>
-        </label>
-        <InputText v-model="form.no_str" class="w-full text-sm font-mono" placeholder="Nomor STR" />
-        <small v-if="errors.no_str" class="text-xs" style="color: #B54245">{{ errors.no_str }}</small>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
-            Role <span style="color: #B54245">*</span>
-          </label>
-          <Select v-model="form.id_role" :options="roles" optionLabel="nama_role" optionValue="id_role" placeholder="Pilih role" class="w-full text-sm" />
-          <small v-if="errors.id_role" class="text-xs" style="color: #B54245">{{ errors.id_role }}</small>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1" style="color: var(--color-text-secondary)">
-            Unit <span style="color: #B54245">*</span>
-          </label>
-          <Select v-model="form.id_unit" :options="units" optionLabel="nama_unit" optionValue="id_unit" placeholder="Pilih unit" class="w-full text-sm" />
-          <small v-if="errors.id_unit" class="text-xs" style="color: #B54245">{{ errors.id_unit }}</small>
-        </div>
-      </div>
-    </div>
-    <template #footer>
-      <Button label="Batal" severity="secondary" text @click="visible = false" class="text-sm" />
-      <Button label="Simpan" @click="submit" :loading="loading" class="text-sm" />
     </template>
+
+    <form class="space-y-6 px-1 pb-1 pt-2 sm:px-2" @submit.prevent="submit">
+      <div>
+        <h4 class="mb-3 text-sm font-semibold" style="color: var(--color-text-primary)">Informasi akun</h4>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="user-form-username" class="mb-1 block text-sm font-medium text-secondary">
+              Username <span class="text-red-600">*</span>
+            </label>
+            <InputText id="user-form-username" v-model="form.username" class="w-full text-sm" placeholder="Contoh: nama.pengguna" autocomplete="username" />
+            <small v-if="errors.username" class="mt-1 block text-xs text-red-700">{{ errors.username }}</small>
+          </div>
+          <div>
+            <label for="user-form-password" class="mb-1 block text-sm font-medium text-secondary">
+              Password <span v-if="!isEdit" class="text-red-600">*</span>
+            </label>
+            <InputText
+              id="user-form-password"
+              v-model="form.password"
+              type="password"
+              class="w-full text-sm"
+              :placeholder="isEdit ? 'Kosongkan jika tidak diubah' : 'Minimal 8 karakter'"
+              autocomplete="new-password"
+            />
+            <small v-if="errors.password" class="mt-1 block text-xs text-red-700">{{ errors.password }}</small>
+            <small v-else-if="isEdit" class="mt-1 block text-xs text-secondary">Biarkan kosong untuk mempertahankan password saat ini.</small>
+          </div>
+          <div class="sm:col-span-2">
+            <label for="user-form-name" class="mb-1 block text-sm font-medium text-secondary">
+              Nama lengkap <span class="text-red-600">*</span>
+            </label>
+            <InputText id="user-form-name" v-model="form.nama" class="w-full text-sm" placeholder="Masukkan nama lengkap" autocomplete="name" />
+            <small v-if="errors.nama" class="mt-1 block text-xs text-red-700">{{ errors.nama }}</small>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="mb-3 text-sm font-semibold" style="color: var(--color-text-primary)">Informasi profesi</h4>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="user-form-profession" class="mb-1 block text-sm font-medium text-secondary">
+              Profesi <span class="text-red-600">*</span>
+            </label>
+            <Select
+              inputId="user-form-profession"
+              v-model="form.profesi"
+              :options="profesiOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Pilih profesi"
+              class="w-full text-sm"
+            />
+            <small v-if="errors.profesi" class="mt-1 block text-xs text-red-700">{{ errors.profesi }}</small>
+          </div>
+          <div v-if="form.profesi === 'Dokter'">
+            <label for="user-form-specialization" class="mb-1 block text-sm font-medium text-secondary">Spesialisasi</label>
+            <InputText id="user-form-specialization" v-model="form.spesialisasi" class="w-full text-sm" placeholder="Contoh: Anak" />
+          </div>
+          <div>
+            <label for="user-form-str" class="mb-1 block text-sm font-medium text-secondary">
+              No. STR <span class="text-red-600">*</span>
+            </label>
+            <InputText id="user-form-str" v-model="form.no_str" class="w-full text-sm font-mono" placeholder="Masukkan nomor STR" />
+            <small v-if="errors.no_str" class="mt-1 block text-xs text-red-700">{{ errors.no_str }}</small>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="mb-3 text-sm font-semibold" style="color: var(--color-text-primary)">Akses dan penempatan</h4>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label for="user-form-role" class="mb-1 block text-sm font-medium text-secondary">
+              Role <span class="text-red-600">*</span>
+            </label>
+            <Select
+              inputId="user-form-role"
+              v-model="form.id_role"
+              :options="roles"
+              optionLabel="nama_role"
+              optionValue="id_role"
+              placeholder="Pilih role"
+              class="w-full text-sm"
+            />
+            <small v-if="errors.id_role" class="mt-1 block text-xs text-red-700">{{ errors.id_role }}</small>
+          </div>
+          <div>
+            <label for="user-form-unit" class="mb-1 block text-sm font-medium text-secondary">
+              Unit <span class="text-red-600">*</span>
+            </label>
+            <Select
+              inputId="user-form-unit"
+              v-model="form.id_unit"
+              :options="units"
+              optionLabel="nama_unit"
+              optionValue="id_unit"
+              placeholder="Pilih unit"
+              class="w-full text-sm"
+            />
+            <small v-if="errors.id_unit" class="mt-1 block text-xs text-red-700">{{ errors.id_unit }}</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end" style="border-color: var(--color-border)">
+        <Button label="Batal" severity="secondary" outlined class="text-sm" :disabled="saving" @click="close" />
+        <Button
+          :label="isEdit ? 'Simpan Perubahan' : 'Tambah Pengguna'"
+          icon="pi pi-check"
+          type="submit"
+          class="text-sm"
+          :loading="saving"
+          :disabled="saving"
+        />
+      </div>
+    </form>
   </Dialog>
 </template>
 
 <script setup>
-import { ref, watch, reactive, computed } from 'vue'
+import { watch, reactive, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -83,13 +153,12 @@ const props = defineProps({
   show: { type: Boolean, default: false },
   user: { type: Object, default: null },
   roles: { type: Array, default: () => [] },
-  units: { type: Array, default: () => [] }
+  units: { type: Array, default: () => [] },
+  saving: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:show', 'saved'])
 
-const visible = ref(props.show)
-const loading = ref(false)
 const form = reactive({
   username: '',
   password: '',
@@ -115,7 +184,6 @@ const isEdit = computed(() => !!props.user)
 const title = computed(() => isEdit.value ? 'Edit Pengguna' : 'Tambah Pengguna')
 
 watch(() => props.show, (val) => {
-  visible.value = val
   if (val) {
     if (props.user) {
       Object.assign(form, {
@@ -142,9 +210,7 @@ watch(() => props.show, (val) => {
     }
     Object.keys(errors).forEach(k => delete errors[k])
   }
-})
-
-watch(visible, (val) => { emit('update:show', val) })
+}, { immediate: true })
 
 function validate() {
   Object.keys(errors).forEach(k => delete errors[k])
@@ -159,13 +225,11 @@ function validate() {
   return Object.keys(errors).length === 0
 }
 
-async function submit() {
+function submit() {
   if (!validate()) return
-  loading.value = true
   const payload = { ...form }
   if (isEdit.value && !payload.password) delete payload.password
   emit('saved', { ...payload, id: props.user?.id_user })
-  loading.value = false
-  visible.value = false
 }
+
 </script>

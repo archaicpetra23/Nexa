@@ -1,7 +1,8 @@
 # Nexa — UI Design Specification
 ## Sistem Informasi Pengelolaan Data Casemix Terintegrasi
 
-**Versi:** 1.0.0
+  **Versi:** 1.1.0
+**Diperbarui:** 2026-10-01
 **Stack:** Vue 3 (Composition API) + PrimeVue + Tailwind CSS
 
 ---
@@ -106,12 +107,71 @@ Line-height body: 1.5. Hindari judul besar dramatis ala landing page — ini sof
 
 ---
 
+### Template Visual Nexa
+
+Semua halaman setelah login menggunakan shell aplikasi yang sama. Isi halaman boleh
+berbeda berdasarkan role, tetapi urutan dan hirarki visual berikut harus dipertahankan:
+
+```text
+┌──────────────────┬──────────────────────────────────────────────┐
+│  N  Nexa         │  [☰]  Nexa  >  Nama Halaman   Nama User  (N) │
+│                  ├──────────────────────────────────────────────┤
+│  MENU UTAMA      │  Eyebrow/konteks halaman                      │
+│  ◉ Dashboard     │  H1 + deskripsi singkat       [Aksi utama]    │
+│  ◉ Menu role     │                                              │
+│                  │  [Tab bila perlu]                            │
+│  ┌────────────┐  │  Judul section       jumlah data             │
+│  │ 🛡 Akses    │  │  [Cari] [Filter] [Tanggal] [Aksi sekunder]   │
+│  │ terlindungi │  │                                              │
+│  └────────────┘  │  ┌────────────────────────────────────────┐  │
+│  (N) Pengguna    │  │  Header sticky / isi tabel / pagination │  │
+└──────────────────┴──┴────────────────────────────────────────┴──┘
+```
+
+Aturan ukuran template:
+
+- Sidebar desktop lebar **224px**, dapat disembunyikan; pada layar `≤767px`
+  berubah menjadi drawer dengan backdrop.
+- Topbar tinggi minimum **66px** di desktop dan **60px** di mobile, selalu sticky.
+- Area konten memakai `max-width: 1200px`, rata kiri, dengan padding desktop
+  `30px` dan mobile `16px`.
+- Footer menampilkan identitas sistem dan status akses aman, tetapi tidak boleh
+  mengambil perhatian lebih besar daripada konten.
+- Halaman data menggunakan pola **hero halaman → tab (opsional) → section →
+  filter → tabel**. Jangan membuat setiap baris data menjadi card terpisah.
+
+### Template Panel Admin
+
+Panel admin adalah contoh implementasi template data-dense Nexa dan menjadi acuan
+untuk halaman manajemen lain:
+
+1. **Hero**: label konteks dengan ikon, judul, deskripsi satu baris, dan aksi
+   utama yang berubah sesuai tab aktif.
+2. **Tab**: gunakan untuk kelompok data yang setara (Pengguna, Klaim, Audit Trail,
+   Unit, Role). Tab aktif menggunakan warna `primary`.
+3. **Section heading**: judul dan deskripsi di kiri, jumlah data dengan ikon di
+   kanan.
+4. **Filter bar**: pencarian, dropdown, date picker, dan ekspor diletakkan dalam
+   satu baris; pada mobile elemen filter boleh membungkus.
+5. **Modern table**: header sticky, zebra halus, kolom kode memakai `font-mono`,
+   pagination di footer, serta empty/loading state di dalam area tabel.
+6. **Form modal**: kelompokkan field berdasarkan konteks, gunakan label eksplisit,
+   validasi inline, footer terpisah, dan tombol `Batal` sebelum tombol simpan.
+
+Gunakan komponen/layout yang sudah tersedia (`DefaultLayout`, `Sidebar`, `Topbar`,
+`ModernTable`, `StatusBadge`) sebelum membuat variasi baru.
+
 ## 5. Komponen Kunci
 
 ### Sidebar Navigasi
 - Item aktif: background `primary-dark`, teks putih.
-- Item non-aktif: teks `text-secondary`, hover ke `bg-base` sedikit lebih gelap.
+- Item non-aktif: teks terang dengan opacity lebih rendah di atas sidebar,
+  hover ke `primary-hover`.
 - Ikon di kiri tiap label, konsisten set ikon (misal PrimeIcons).
+- Logo Nexa memakai ikon medis sederhana dalam kotak putih; jangan menambahkan
+  logo dekoratif atau gradient.
+- Bagian bawah sidebar selalu memuat kartu “Akses terlindungi”, identitas pengguna,
+  role/unit, avatar inisial, dan tombol keluar.
 
 ### Tombol
 | Jenis | Style |
@@ -136,6 +196,24 @@ Line-height body: 1.5. Hindari judul besar dramatis ala landing page — ini sof
 - Header sticky, background `surface`, teks `text-secondary` uppercase kecil (13px, bukan tracking berlebihan).
 - Baris zebra: selang-seling `surface` dan `bg-base` sangat tipis.
 - Kolom kode (NIK, No. RM, ICD) pakai font mono agar mudah dipindai mata.
+- Tabel boleh memiliki wrapper dengan radius 12px dan shadow sangat tipis untuk
+  memisahkan area kerja dari background; radius elemen di dalam tabel tetap 6px.
+- Lebar tabel boleh melebihi viewport secara horizontal, tetapi header dan
+  pagination harus tetap dapat digunakan pada layar kecil.
+- Aksi baris menggunakan ikon dengan `aria-label`; jangan mengandalkan tooltip
+  atau warna ikon saja.
+- Loading memakai indikator ringkas di area tabel, bukan spinner fullscreen.
+
+### Filter, Tab, dan Date Picker
+- Search input wajib memiliki ikon pencarian dan placeholder yang menjelaskan
+  field yang dicari.
+- Filter role/status memakai dropdown dengan opsi “Semua …” sebagai keadaan awal.
+- Filter tanggal menggunakan format lokal `dd/mm/yy`; gunakan rentang “Dari
+  tanggal” dan “Sampai tanggal” bila data memiliki periode.
+- Dropdown dan date picker harus memiliki background putih solid, border tipis,
+  radius 6–10px, dan z-index di atas tabel/modal.
+- Tab hanya mengubah dataset/konteks pada halaman yang sama; jangan gunakan tab
+  untuk alur langkah berurutan.
 
 ### Form Rekam Medis
 - Tab per section, indikator progres kecil di atas (bukan wizard step besar).
@@ -144,6 +222,22 @@ Line-height body: 1.5. Hindari judul besar dramatis ala landing page — ini sof
 ### Empty & Error States
 - Kosong: pesan singkat + ajakan aksi jelas (misal "Belum ada kunjungan. Tambah kunjungan baru").
 - Error: jelaskan apa yang salah dan cara memperbaikinya, nada netral-informatif, tidak meminta maaf berlebihan.
+- Loading: pertahankan struktur halaman jika memungkinkan; tampilkan pesan
+  “Memuat data...” dan ikon spinner kecil pada area yang sedang dimuat.
+- Aksi destruktif (hapus/tolak) harus meminta konfirmasi dan menjelaskan objek
+  yang terdampak.
+
+### Modal dan Form
+- Modal memakai surface putih, overlay gelap transparan, header dan footer
+  dipisahkan border tipis, serta lebar responsif (`calc(100vw - 2rem)` pada
+  layar kecil).
+- Field dikelompokkan dalam section seperti “Informasi akun”, “Informasi profesi”,
+  dan “Akses dan penempatan”; hindari form panjang tanpa kelompok.
+- Label berada di atas input, field wajib diberi tanda `*`, dan error ditampilkan
+  tepat di bawah field terkait.
+- Submit harus memiliki state loading dan dinonaktifkan selama penyimpanan.
+- Tombol `Batal` tidak boleh terlihat sebagai aksi utama; tombol simpan/tambah
+  menggunakan primary action.
 
 ---
 
@@ -161,10 +255,28 @@ Line-height body: 1.5. Hindari judul besar dramatis ala landing page — ini sof
 - Focus state keyboard terlihat jelas (outline 2px `primary` pada elemen fokus).
 - Status tidak pernah disampaikan lewat warna saja — selalu disertai ikon/teks.
 - Ukuran target klik/tap minimal 40x40px untuk elemen interaktif di table actions.
+- Semua tabel memiliki `aria-label`, header memakai `scope="col"`, dan tab
+  memakai `role="tablist"`/`role="tab"` serta `aria-selected`.
+- Drawer/sidebar memiliki tombol tutup pada mobile dan backdrop yang dapat
+  diklik; perubahan route menutup drawer.
+- Jangan menaruh informasi penting hanya pada hover, placeholder, atau ikon.
 
----
+## 8. Responsive Rules
 
-## 8. Referensi Cepat (Design Tokens)
+| Breakpoint | Aturan |
+|---|---|
+| `>900px` | Sidebar terbuka secara default, filter dapat satu baris, tabel memakai seluruh area konten |
+| `768–900px` | Padding konten diperkecil, filter boleh membungkus, sidebar tetap dapat dilipat |
+| `≤767px` | Sidebar menjadi drawer, topbar dipadatkan, filter dan aksi memenuhi lebar |
+| `≤420px` | Sembunyikan salinan nama user di topbar, pertahankan avatar dan kontrol utama |
+
+- Jangan menghapus data penting hanya karena layar kecil; gunakan scroll horizontal
+  pada tabel.
+- Aksi utama tetap terlihat di dekat judul halaman dan tidak dipindahkan ke menu
+  overflow tanpa alasan.
+- Hormati `prefers-reduced-motion` pada semua breakpoint.
+
+## 9. Referensi Cepat (Design Tokens)
 
 ```css
 :root {

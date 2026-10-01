@@ -1,5 +1,5 @@
 <template>
-  <div :class="['app-shell', { 'is-sidebar-hidden': !sidebarVisible }]">
+  <div :class="['app-shell', { 'is-sidebar-hidden': !sidebarVisible, 'is-admin-page': route.name === 'admin' }]">
     <Sidebar
       :mobile-open="mobileSidebarOpen"
       :desktop-hidden="!sidebarVisible"
@@ -84,6 +84,13 @@ watch(() => route.path, () => {
   background: var(--color-bg-base);
 }
 
+.app-shell.is-admin-page {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .app-main-column {
   display: flex;
   min-width: 0;
@@ -92,9 +99,20 @@ watch(() => route.path, () => {
   flex-direction: column;
 }
 
+.is-admin-page .app-main-column {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .app-content {
   flex: 1 1 auto;
   width: 100%;
+}
+
+.is-admin-page .app-content {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .app-content-inner {
@@ -102,6 +120,13 @@ watch(() => route.path, () => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 30px 30px 40px;
+}
+
+.is-admin-page .app-content-inner {
+  height: 100%;
+  overflow: hidden;
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
 
 .app-footer {
@@ -114,6 +139,13 @@ watch(() => route.path, () => {
   border-top: 1px solid var(--color-border);
   color: var(--color-text-secondary);
   font-size: 10px;
+}
+
+.is-admin-page .app-footer {
+  flex: 0 0 auto;
+  margin-top: 0;
+  padding-top: 10px;
+  padding-bottom: 12px;
 }
 
 .app-footer-secure {
@@ -138,6 +170,11 @@ watch(() => route.path, () => {
   .app-footer {
     margin: 0 20px;
   }
+
+  .is-admin-page .app-content-inner {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
 }
 
 @media (max-width: 767px) {
@@ -160,6 +197,12 @@ watch(() => route.path, () => {
     gap: 8px;
     margin: 0 16px;
     padding-bottom: 16px;
+  }
+
+  .is-admin-page .app-footer {
+    gap: 4px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 </style>
