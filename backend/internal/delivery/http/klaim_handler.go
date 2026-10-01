@@ -20,9 +20,9 @@ func NewKlaimHandler(uc usecase.KlaimUsecase) *KlaimHandler {
 }
 
 type CreateKlaimRequest struct {
-	IDRekam          uint    `json:"id_rekam" binding:"required"`
-	KodeCBGS         string  `json:"kode_cbgs" binding:"required"`
-	NominalKlaim     float64 `json:"nominal_klaim" binding:"gte=0"`
+	IDRekam            uint    `json:"id_rekam" binding:"required"`
+	KodeCBGS           string  `json:"kode_cbgs" binding:"required"`
+	NominalKlaim       float64 `json:"nominal_klaim" binding:"gte=0"`
 	AlasanPendingTolak *string `json:"alasan_pending_tolak"`
 }
 

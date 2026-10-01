@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	ErrKlaimNotFound        = errors.New("klaim tidak ditemukan")
-	ErrKlaimDuplicateRekam  = errors.New("klaim untuk rekam medis ini sudah ada")
-	ErrKlaimAlasanRequired  = errors.New("alasan pending/tolak wajib diisi")
-	ErrKlaimInvalidStatus   = errors.New("status klaim tidak valid")
+	ErrKlaimNotFound       = errors.New("klaim tidak ditemukan")
+	ErrKlaimDuplicateRekam = errors.New("klaim untuk rekam medis ini sudah ada")
+	ErrKlaimAlasanRequired = errors.New("alasan pending/tolak wajib diisi")
+	ErrKlaimInvalidStatus  = errors.New("status klaim tidak valid")
 )
 
 type KlaimUsecase interface {

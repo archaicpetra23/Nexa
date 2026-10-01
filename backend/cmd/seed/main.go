@@ -7,6 +7,7 @@ import (
 
 	"nexa/backend/internal/config"
 	"nexa/backend/internal/database"
+	"nexa/backend/internal/model"
 	"nexa/backend/internal/models"
 	"nexa/backend/pkg"
 
@@ -38,6 +39,9 @@ func main() {
 	// Seed regular users only (no admin - will be created manually)
 	seedRegularUsers(db)
 
+	// Seed master reference data
+	seedMasterData(db)
+
 	log.Println("Seeding completed successfully")
 }
 
@@ -45,13 +49,13 @@ func main() {
 func seedRolesAndUnits(db *gorm.DB) {
 	// Roles from PRD
 	roles := []string{
-		"admin_ti",      // Admin TI
-		"petugas_rm",    // Petugas Registrasi & RM
-		"dokter_dpjp",   // Dokter Penanggung Jawab
-		"perawat",       // Perawat Bangsal / Poli
+		"admin_ti",        // Admin TI
+		"petugas_rm",      // Petugas Registrasi & RM
+		"dokter_dpjp",     // Dokter Penanggung Jawab
+		"perawat",         // Perawat Bangsal / Poli
 		"petugas_casemix", // Koder & Verifikator Klaim
-		"keuangan",      // Staf Kasir / Keuangan RS
-		"manajemen",     // Direksi & Komite Medis
+		"keuangan",        // Staf Kasir / Keuangan RS
+		"manajemen",       // Direksi & Komite Medis
 	}
 
 	for _, roleName := range roles {
@@ -78,12 +82,12 @@ func seedRolesAndUnits(db *gorm.DB) {
 func seedRegularUsers(db *gorm.DB) {
 	// Define non-admin roles (all except admin_ti)
 	nonAdminRoles := []string{
-		"petugas_rm",    // Petugas Registrasi & RM
-		"dokter_dpjp",   // Dokter Penanggung Jawab
-		"perawat",       // Perawat Bangsal / Poli
+		"petugas_rm",      // Petugas Registrasi & RM
+		"dokter_dpjp",     // Dokter Penanggung Jawab
+		"perawat",         // Perawat Bangsal / Poli
 		"petugas_casemix", // Koder & Verifikator Klaim
-		"keuangan",      // Staf Kasir / Keuangan RS
-		"manajemen",     // Direksi & Komite Medis
+		"keuangan",        // Staf Kasir / Keuangan RS
+		"manajemen",       // Direksi & Komite Medis
 	}
 
 	// Get role IDs for mapping
@@ -216,4 +220,70 @@ func getSpesialisasiForRole(roleName string) string {
 	default:
 		return ""
 	}
+}
+
+// seedMasterData seeds ICD-10, ICD-9 CM, and INA-CBGs reference data
+func seedMasterData(db *gorm.DB) {
+	// Seed ICD-10 Diagnosis
+	icd10Data := []model.Diagnosis{
+		{KodeICD10: "A09", NamaDiagnosis: "Diare dan Gastroenteritis"},
+		{KodeICD10: "B34", NamaDiagnosis: "Infeksi Virus"},
+		{KodeICD10: "D64", NamaDiagnosis: "Anemia"},
+		{KodeICD10: "E11", NamaDiagnosis: "Diabetes Melitus Tipe 2"},
+		{KodeICD10: "I10", NamaDiagnosis: "Hipertensi"},
+		{KodeICD10: "J06", NamaDiagnosis: "Infeksi Saluran Pernapasan Atas"},
+		{KodeICD10: "J18", NamaDiagnosis: "Pneumonia"},
+		{KodeICD10: "K35", NamaDiagnosis: "Apendisitis"},
+		{KodeICD10: "N39", NamaDiagnosis: "Infeksi Saluran Kemih"},
+		{KodeICD10: "R50", NamaDiagnosis: "Demam"},
+	}
+	for _, d := range icd10Data {
+		result := db.Where("kode_icd10 = ?", d.KodeICD10).FirstOrCreate(&d)
+		if result.Error != nil {
+			log.Printf("Failed to seed ICD-10 %s: %v", d.KodeICD10, result.Error)
+		} else if result.RowsAffected > 0 {
+			log.Printf("Seeded ICD-10: %s - %s", d.KodeICD10, d.NamaDiagnosis)
+		}
+	}
+
+	// Seed ICD-9 CM Tindakan
+	icd9Data := []model.Tindakan{
+		{KodeTindakan: "38.93", NamaTindakan: "Pengambilan Darah Vena", TarifStandar: 50000},
+		{KodeTindakan: "45.13", NamaTindakan: "Endoskopi Lambung", TarifStandar: 1500000},
+		{KodeTindakan: "87.44", NamaTindakan: "Foto Rontgen Dada", TarifStandar: 150000},
+		{KodeTindakan: "88.01", NamaTindakan: "CT Scan Kepala", TarifStandar: 900000},
+		{KodeTindakan: "88.76", NamaTindakan: "USG Abdomen", TarifStandar: 250000},
+		{KodeTindakan: "93.90", NamaTindakan: "Fisioterapi", TarifStandar: 100000},
+		{KodeTindakan: "96.04", NamaTindakan: "Pemasangan Infus", TarifStandar: 75000},
+		{KodeTindakan: "96.71", NamaTindakan: "Ventilator Mekanik", TarifStandar: 2000000},
+		{KodeTindakan: "99.04", NamaTindakan: "Suntikan Antibiotik", TarifStandar: 120000},
+		{KodeTindakan: "99.15", NamaTindakan: "Transfusi Darah", TarifStandar: 450000},
+	}
+	for _, t := range icd9Data {
+		result := db.Where("kode_tindakan = ?", t.KodeTindakan).FirstOrCreate(&t)
+		if result.Error != nil {
+			log.Printf("Failed to seed ICD-9 %s: %v", t.KodeTindakan, result.Error)
+		} else if result.RowsAffected > 0 {
+			log.Printf("Seeded ICD-9: %s - %s", t.KodeTindakan, t.NamaTindakan)
+		}
+	}
+
+	// Seed INA-CBGs Tarif
+	cbgsData := []model.TarifCBGs{
+		{KodeCBGS: "A-4-10-I", Deskripsi: "Kasus Infeksi Ringan", Tarif: 850000},
+		{KodeCBGS: "B-1-14-II", Deskripsi: "Penyakit Jantung Tingkat Sedang", Tarif: 4200000},
+		{KodeCBGS: "C-4-13-III", Deskripsi: "Diabetes Komplikasi Berat", Tarif: 6500000},
+		{KodeCBGS: "D-4-16-I", Deskripsi: "Pneumonia Ringan", Tarif: 1750000},
+		{KodeCBGS: "E-4-10-II", Deskripsi: "Hipertensi dengan Komplikasi", Tarif: 2100000},
+	}
+	for _, c := range cbgsData {
+		result := db.Where("kode_cbgs = ?", c.KodeCBGS).FirstOrCreate(&c)
+		if result.Error != nil {
+			log.Printf("Failed to seed CBGs %s: %v", c.KodeCBGS, result.Error)
+		} else if result.RowsAffected > 0 {
+			log.Printf("Seeded CBGs: %s - %s", c.KodeCBGS, c.Deskripsi)
+		}
+	}
+
+	log.Println("Master data seeding completed")
 }

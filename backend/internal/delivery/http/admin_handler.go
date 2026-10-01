@@ -186,7 +186,16 @@ func (h *AdminHandler) GetAuditTrail(c *gin.Context) {
 		query = query.Where("waktu >= ?", dari)
 	}
 	if sampai != "" {
-		query = query.Where("waktu <= ?", sampai)
+		endDate, err := time.Parse("2006-01-02", sampai)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "Format tanggal sampai tidak valid",
+				"data":    nil,
+			})
+			return
+		}
+		query = query.Where("waktu < ?", endDate.AddDate(0, 0, 1))
 	}
 
 	var total int64

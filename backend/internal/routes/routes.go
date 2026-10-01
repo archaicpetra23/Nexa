@@ -85,12 +85,41 @@ func Setup(r *gin.Engine, db *gorm.DB, jwtSecret string) {
 
 		master := api.Group("/master", authMw)
 		{
+			// ICD-10
+			master.GET("/icd10", masterHandler.ListICD10)
+			master.GET("/icd10/search", masterHandler.SearchICD10)
+			master.GET("/icd10/:kode", masterHandler.GetICD10)
+			master.POST("/icd10", middleware.RBACMiddleware("admin_ti"), masterHandler.CreateICD10)
+			master.PUT("/icd10/:kode", middleware.RBACMiddleware("admin_ti"), masterHandler.UpdateICD10)
+			master.DELETE("/icd10/:kode", middleware.RBACMiddleware("admin_ti"), masterHandler.DeleteICD10)
+			// ICD-9 CM (Tindakan)
+			master.GET("/icd9", masterHandler.ListICD9)
+			master.GET("/icd9/search", masterHandler.SearchICD9)
+			master.GET("/icd9/:kode", masterHandler.GetICD9)
+			master.POST("/icd9", middleware.RBACMiddleware("admin_ti"), masterHandler.CreateICD9)
+			master.PUT("/icd9/:kode", middleware.RBACMiddleware("admin_ti"), masterHandler.UpdateICD9)
+			master.DELETE("/icd9/:kode", middleware.RBACMiddleware("admin_ti"), masterHandler.DeleteICD9)
+			// CBGs
+			master.GET("/cbgs", masterHandler.ListCBGS)
+			master.GET("/cbgs/:kode", masterHandler.GetCBGS)
+			master.POST("/cbgs", middleware.RBACMiddleware("admin_ti"), masterHandler.CreateCBGS)
+			master.PUT("/cbgs/:kode", middleware.RBACMiddleware("admin_ti"), masterHandler.UpdateCBGS)
+			master.DELETE("/cbgs/:kode", middleware.RBACMiddleware("admin_ti"), masterHandler.DeleteCBGS)
+			// Existing (keep for backward compatibility)
 			master.GET("/roles", masterHandler.GetRoles)
 			master.GET("/units", masterHandler.GetUnits)
 			master.POST("/units", middleware.RBACMiddleware("admin_ti"), masterHandler.CreateUnit)
 			master.PUT("/units/:id", middleware.RBACMiddleware("admin_ti"), masterHandler.UpdateUnit)
 			master.DELETE("/units/:id", middleware.RBACMiddleware("admin_ti"), masterHandler.DeleteUnit)
 		}
+
+		// Rekam Medis - Update and Delete
+		rekam.PUT("/:id", middleware.RBACMiddleware("admin_ti", "petugas_rm", "dokter_dpjp"), rekamHandler.UpdateRekam)
+		rekam.DELETE("/:id", middleware.RBACMiddleware("admin_ti", "dokter_dpjp"), rekamHandler.DeleteRekam)
+
+		// Dashboard
+		dashboardHandler := delivery.NewDashboardHandler(db)
+		api.GET("/dashboard/stats", authMw, dashboardHandler.GetStats)
 	}
 
 	r.GET("/health", func(c *gin.Context) {

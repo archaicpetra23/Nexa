@@ -40,7 +40,7 @@ type UpdateUserRequest struct {
 	Spesialisasi string `json:"spesialisasi"`
 	NoSTR        string `json:"no_str"`
 	IDRole       uint   `json:"id_role"`
-	IDUnit       uint `json:"id_unit"`
+	IDUnit       uint   `json:"id_unit"`
 }
 
 func (h *AdminUserHandler) CreateUser(c *gin.Context) {
