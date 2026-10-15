@@ -43,8 +43,12 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const pageLabels = {
-  '/dashboard': 'Dashboard',
-  '/admin': 'Panel admin'
+  '/dashboard':   'Dashboard',
+  '/pasien':      'Data Pasien',
+  '/rekam-medis': 'Rekam Medis',
+  '/klaim':       'Klaim BPJS',
+  '/master-icd':  'Master ICD',
+  '/admin':       'Panel admin'
 }
 
 const roleLabels = {

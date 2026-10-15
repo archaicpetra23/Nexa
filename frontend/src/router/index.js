@@ -27,6 +27,30 @@ const routes = [
     name: 'admin',
     component: AdminView,
     meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/pasien',
+    name: 'pasien',
+    component: () => import('../views/PasienView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/rekam-medis',
+    name: 'rekam-medis',
+    component: () => import('../views/RekamMedisView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/klaim',
+    name: 'klaim',
+    component: () => import('../views/KlaimView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/master-icd',
+    name: 'master-icd',
+    component: () => import('../views/MasterICDView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

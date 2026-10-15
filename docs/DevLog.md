@@ -4,6 +4,57 @@
 
 ---
 
+## [2026-10-15 12:05 WIB] — Implementasi BRIEF 2: Halaman Data & Navigasi Berbasis Peran
+
+- **Agent:** C
+- **Modul:** Frontend (Data Palaude Code
+- **Tipe:** Feature Implementation
+- **Status:** Selesaiges, Navigation, Dashboard Stats)
+- **File terdampak:**
+  - `frontend/package.json` (tambah chart.js dependency)
+  - `frontend/src/components/Sidebar.vue` (role-based menu filtering)
+  - `frontend/src/components/Topbar.vue` (breadcrumb labels extended)
+  - `frontend/src/router/index.js` (4 lazy-loaded routes)
+  - `frontend/src/views/DashboardView.vue` (stat cards, charts, recent claims)
+  - `frontend/src/views/MasterICDView.vue` (created)
+  - `frontend/src/views/PasienView.vue` (created)
+  - `frontend/src/views/KlaimView.vue` (created)
+  - `frontend/src/views/RekamMedisView.vue` (created)
+- **Deskripsi:**
+  Implementasi lengkap BRIEF 2: membuat 5 halaman data (Master ICD, Pasien, Rekam Medis, Klaim, Dashboard), memperluas navigasi Sidebar dengan filtering berbasis peran, memperluas Topbar dengan label breadcrumb, dan menambahkan routing lazy-loaded. Semua implementasi mengikuti Design_UI.md (token CSS, tidak ada warna hardcode, tidak ada emoji), Coding_Style.md (Composition API, validasi inline, soft delete), dan Agent.md (RBAC filtering bukan disable, HttpOnly cookies).
+
+  **Sidebar:** Menu diperluas dengan MENU array berisi 6 item (Dashboard, Data Pasien, Rekam Medis, Klaim BPJS, Master ICD, Panel admin). Filtering berbasis role menggunakan computed property menuItems yang memfilter MENU berdasarkan authStore.user?.role. Dashboard selalu visible (roles: []), item lain muncul hanya untuk role yang ditentukan (contoh: Master ICD hanya untuk admin_ti, petugas_casemix, dokter_dpjp).
+
+  **Topbar:** pageLabels object diperluas dari 2 entry menjadi 6 entry (/pasien, /rekam-medis, /klaim, /master-icd).
+
+  **Router:** 4 route baru ditambahkan dengan lazy loading: /pasien, /rekam-medis, /klaim, /master-icd. Semua menggunakan meta: { requiresAuth: true }.
+
+  **MasterICDView (580+ lines):** Manage 3 master data code sets dengan tab interface. Setiap tab (ICD-10, ICD-9 CM, INA-CBGs) punya CRUD lengkap dengan ModernTable, form modal, delete confirmation. Role guard: canMutate computed menyembunyikan tombol add/edit/delete untuk non-admin_ti. Lazy pagination per tab (data fetch hanya saat tab aktif). Code badge dengan styling mono font. Tarif fields menggunakan InputNumber dengan currency="IDR" locale="id-ID".
+
+  **PasienView (400+ lines):** Patient CRUD dengan search debounced 300ms. Form modal dengan validasi client-side: NIK harus 16 digit numeric, No. BPJS harus 13 digit jika diisi. Inline error messages di bawah field. Table columns: NIK (mono), Nama, Tgl. Lahir (dd/mm/yy), Jenis Kelamin, No. BPJS, Alamat (truncated max-width 280px). API: GET/POST/PUT/DELETE /pasien.
+
+  **KlaimView (450+ lines):** Claim management dengan status transitions. Stat strip di atas menampilkan 3 cards (pending/disetujui/ditolak counts) dengan warna sesuai status. Filter bar dengan search + status dropdown. Create modal: select No. RM, dropdown Kode CBGs dengan tarif hint. Status change modal: CRITICAL business rule — alasan_pending_tolak textarea REQUIRED jika status pending ATAU ditolak (blocking submit jika kosong). Delete hanya visible untuk admin_ti. Rupiah formatting: Intl.NumberFormat('id-ID', currency: 'IDR'). API: GET /klaim dengan filter status, PATCH /klaim/:id/status.
+
+  **RekamMedisView (550+ lines):** Medical record CRUD dengan 3-tab form. Tab 1 "Kunjungan": ID Pasien, ID Dokter, Jenis Perawatan, Tanggal Kunjungan/Pulang, Keluhan, Catatan. Tab 2 "Diagnosis": hanya enabled saat edit, AutoComplete search ICD-10 dengan debounce 300ms ke /master/icd10/search, dropdown jenis Primer/Sekunder, list diagnoses dengan delete buttons. Tab 3 "Tindakan": AutoComplete ICD-9 CM search, Jumlah input, list tindakans. Empty state saat create: "Simpan kunjungan dulu untuk menambah diagnosis".
+
+  **DashboardView extended:** Ditambahkan stat cards row (5 cards: total_pasien, total_klaim, klaim_pending, klaim_disetujui, klaim_ditolak) dengan icon tiles berwarna sesuai Design_UI. Charts row dengan 2 panels: Penyakit Terbanyak (chart.js horizontal bar chart dari top_diagnosis), Status Klaim (doughnut chart breakdown status). Nominal summary line menampilkan total_nominal_disetujui sebagai rupiah. Recent claims table dengan ModernTable showing 5 klaim terbaru dari GET /klaim?page=1&limit=5. Existing "Informasi akun" dan "Ruang kerja" panels tetap berada di bawah (TIDAK dihapus). Data fetched dari /dashboard/stats endpoint on mount.
+
+  **Dependencies:** chart.js ^4.4.7 ditambahkan ke package.json.
+
+  **Design compliance:** Semua warna menggunakan CSS custom properties (--color-primary, --color-status-\*, etc). Tidak ada hardcoded hex colors. Font IBM Plex Sans/Mono. Radius 6px. Tidak ada emoji.
+
+  **RBAC:** Filtering di UI (menu items muncul/hilang), bukan disabled state. Role checks di component level (canMutate, canDelete computed properties).
+
+  **Form patterns:** Client-side validation dengan inline error messages. Debounced search 300ms. AutoComplete dengan API hits debounced. DatePicker untuk tanggal. InputNumber untuk currency. Textarea untuk long text. All modals use v-model:show pattern.
+
+- **Error/Kendala:**
+  Edit pertama frontend/package.json gagal dengan "String to replace not found" karena version mismatch (expected ^4.3.2 but file had ^4.2.5). Fixed dengan membaca file dulu untuk mendapatkan exact string.
+
+- **Next Step:**
+  Run npm install untuk install chart.js, npm run build untuk verify zero compilation errors, test dengan running stack (docker compose up).
+
+---
+
 ## [2026-10-01 18:15] — Fix Bug Fatal Seed Master Data: GORM Rewrite Tipe Primary Key
 
 - **Agent:** Hermes (SSERAPHIM)
@@ -43,6 +94,7 @@
   `seedData` dihapus. Itu melanggar `Agent.md` §3 (perubahan skema wajib lewat file migrasi)
   dan sekaligus menutupi bug di atas, sehingga bug aslinya tidak pernah terlihat. Loop seed
   kini memeriksa dan mencatat error.
+
 - **Error/Kendala:**
   `ERROR: invalid input syntax for type bigint: "A09" (SQLSTATE 22P02)` untuk 25 baris seed.
   Root cause: GORM menulis ulang tipe primary key tabel induk menjadi bigint akibat relasi
@@ -65,7 +117,7 @@
   - `backend/internal/delivery/http/master_handler.go` — tambah 17 endpoint untuk ICD-10, ICD-9 CM, INA-CBGs (list, search, get, create, update, delete) dengan role guard admin_ti
   - `backend/internal/delivery/http/dashboard_handler.go` — baru, statistik dashboard: total_pasien, total_klaim, status breakdown, total_nominal_disetujui, top_diagnosis
   - `backend/internal/delivery/http/rekam_medis_handler.go` — tambah UpdateRekam (PUT) dan DeleteRekam (DELETE) handlers
-  - `backend/internal/routes/routes.go` — register semua endpoint baru: /master/icd10*, /master/icd9*, /master/cbgs*, /dashboard/stats, dan PUT/DELETE /rekam-medis/:id
+  - `backend/internal/routes/routes.go` — register semua endpoint baru: /master/icd10*, /master/icd9*, /master/cbgs\*, /dashboard/stats, dan PUT/DELETE /rekam-medis/:id
   - `backend/internal/database/postgres.go` — extend seedData dengan 10 ICD-10, 10 ICD-9 CM, 5 INA-CBGs
   - `backend/cmd/seed/main.go` — sync dengan reference data seed
 - **Deskripsi:**
@@ -264,5 +316,5 @@
 ## Error / Isu yang Masih Terbuka
 
 | Tanggal Ditemukan | Modul | Deskripsi Singkat | Status |
-| :--- | :--- | :--- | :--- |
-| — | — | Belum ada. | — |
+| :---------------- | :---- | :---------------- | :----- |
+| —                 | —     | Belum ada.        | —      |

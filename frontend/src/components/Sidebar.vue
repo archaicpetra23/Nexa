@@ -74,12 +74,18 @@ const roleLabels = {
   manajemen: 'Manajemen'
 }
 
+const MENU = [
+  { label: 'Dashboard',    to: '/dashboard',   icon: 'pi pi-home',          roles: [] },
+  { label: 'Data Pasien',  to: '/pasien',      icon: 'pi pi-users',         roles: ['admin_ti','petugas_rm','dokter_dpjp','perawat','manajemen'] },
+  { label: 'Rekam Medis',  to: '/rekam-medis', icon: 'pi pi-file-edit',     roles: ['admin_ti','petugas_rm','dokter_dpjp','perawat'] },
+  { label: 'Klaim BPJS',   to: '/klaim',       icon: 'pi pi-credit-card',   roles: ['admin_ti','petugas_casemix','keuangan','manajemen'] },
+  { label: 'Master ICD',   to: '/master-icd',  icon: 'pi pi-book',          roles: ['admin_ti','petugas_casemix','dokter_dpjp'] },
+  { label: 'Panel admin',  to: '/admin',       icon: 'pi pi-sliders-h',     roles: ['admin_ti'] }
+]
+
 const menuItems = computed(() => {
-  const items = [{ label: 'Dashboard', to: '/dashboard', icon: 'pi pi-home' }]
-  if (authStore.user?.role === 'admin_ti') {
-    items.push({ label: 'Panel admin', to: '/admin', icon: 'pi pi-sliders-h' })
-  }
-  return items
+  const userRole = authStore.user?.role
+  return MENU.filter(item => item.roles.length === 0 || item.roles.includes(userRole))
 })
 
 const roleLabel = computed(() => roleLabels[authStore.user?.role] || authStore.user?.role || 'Staf rumah sakit')

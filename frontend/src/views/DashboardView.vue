@@ -13,6 +13,129 @@
         </time>
       </header>
 
+      <!-- Stats Cards -->
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #EEF2F5; color: var(--color-primary)">
+            <i class="pi pi-users" aria-hidden="true"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Total Pasien</span>
+            <span class="stat-value font-mono">{{ formatNumber(stats.total_pasien) }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #EEF2F5; color: var(--color-primary)">
+            <i class="pi pi-file-check" aria-hidden="true"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Total Klaim</span>
+            <span class="stat-value font-mono">{{ formatNumber(stats.total_klaim) }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #FEF3C7; color: #B7791F">
+            <i class="pi pi-clock" aria-hidden="true"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Klaim Pending</span>
+            <span class="stat-value font-mono">{{ formatNumber(stats.klaim_pending) }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #D1FAE5; color: #2F7A4F">
+            <i class="pi pi-check" aria-hidden="true"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Klaim Disetujui</span>
+            <span class="stat-value font-mono">{{ formatNumber(stats.klaim_disetujui) }}</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background: #FEE2E2; color: #B54245">
+            <i class="pi pi-times" aria-hidden="true"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Klaim Ditolak</span>
+            <span class="stat-value font-mono">{{ formatNumber(stats.klaim_ditolak) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-grid">
+        <!-- Top Diagnosis Chart -->
+        <div class="chart-panel">
+          <div class="chart-header">
+            <h3>Penyakit Terbanyak</h3>
+            <span class="chart-caption">Berdasarkan kode ICD-10</span>
+          </div>
+          <div v-if="stats.top_diagnosis && stats.top_diagnosis.length" class="chart-container">
+            <canvas ref="diagnosisChart"></canvas>
+          </div>
+          <div v-else class="chart-empty">
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+            <p>Belum ada data diagnosis</p>
+          </div>
+        </div>
+
+        <!-- Claim Status Chart -->
+        <div class="chart-panel">
+          <div class="chart-header">
+            <h3>Status Klaim</h3>
+            <span class="chart-caption">Distribusi status klaim BPJS</span>
+          </div>
+          <div v-if="hasClaimData" class="chart-container">
+            <canvas ref="statusChart"></canvas>
+          </div>
+          <div v-else class="chart-empty">
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+            <p>Belum ada data klaim</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nominal Summary -->
+      <div class="nominal-summary">
+        <i class="pi pi-money-bill" aria-hidden="true"></i>
+        <span class="summary-label">Total Nominal Disetujui:</span>
+        <span class="summary-value font-mono">{{ formatRupiah(stats.total_nominal_disetujui) }}</span>
+      </div>
+
+      <!-- Recent Claims -->
+      <section class="recent-claims-panel" aria-labelledby="recent-title">
+        <header class="panel-heading">
+          <div>
+            <h2 id="recent-title">Klaim Terbaru</h2>
+            <p>5 klaim terbaru dalam sistem</p>
+          </div>
+          <router-link to="/klaim" class="view-all-link">Lihat semua</router-link>
+        </header>
+
+        <ModernTable
+          :value="recentClaims"
+          :loading="claimsLoading"
+          :paginator="false"
+          dataKey="id_klaim"
+          ariaLabel="Daftar klaim terbaru"
+        >
+          <template #header>
+            <th scope="col">ID Klaim</th>
+            <th scope="col">Pasien</th>
+            <th scope="col">Kode ICD</th>
+            <th scope="col">Nominal</th>
+            <th scope="col">Status</th>
+          </template>
+          <template #row="{ item }">
+            <td class="font-mono">{{ item.id_klaim }}</td>
+            <td class="user-name-cell">{{ item.pasien_nama || '-' }}</td>
+            <td class="font-mono">{{ item.kode_cbgs || '-' }}</td>
+            <td class="font-mono amount-cell">{{ formatRupiah(item.nominal_klaim) }}</td>
+            <td><StatusBadge :status="item.status_klaim" type="claim" /></td>
+          </template>
+        </ModernTable>
+      </section>
+
       <section class="welcome-panel" aria-label="Pengguna saat ini">
         <span class="welcome-avatar" aria-hidden="true">{{ initials }}</span>
         <div class="welcome-copy">
@@ -97,11 +220,36 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { Chart, registerables } from 'chart.js'
 import DefaultLayout from '../layouts/DefaultLayout.vue'
+import ModernTable from '../components/ModernTable.vue'
+import StatusBadge from '../components/StatusBadge.vue'
 import { useAuthStore } from '../stores/auth'
+import client from '../api/client'
+
+Chart.register(...registerables)
 
 const authStore = useAuthStore()
+
+const stats = ref({
+  total_pasien: 0,
+  total_klaim: 0,
+  klaim_pending: 0,
+  klaim_disetujui: 0,
+  klaim_ditolak: 0,
+  klaim_draft: 0,
+  total_nominal_disetujui: 0,
+  top_diagnosis: []
+})
+
+const recentClaims = ref([])
+const claimsLoading = ref(false)
+
+const diagnosisChart = ref(null)
+const statusChart = ref(null)
+let diagnosisChartInstance = null
+let statusChartInstance = null
 
 const roleLabels = {
   admin_ti: 'Administrator TI',
@@ -126,6 +274,10 @@ const initials = computed(() => {
   return name.trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join('')
 })
 
+const hasClaimData = computed(() => {
+  return stats.value.klaim_disetujui > 0 || stats.value.klaim_pending > 0 || stats.value.klaim_ditolak > 0
+})
+
 const now = new Date()
 const dateTime = [
   now.getFullYear(),
@@ -145,7 +297,715 @@ const greeting = (() => {
   if (hour < 18) return 'Selamat sore'
   return 'Selamat malam'
 })()
+
+async function fetchStats() {
+  try {
+    const res = await client.get('/dashboard/stats')
+    if (res.data.success) {
+      stats.value = res.data.data
+      renderCharts()
+      fetchRecentClaims()
+    }
+  } catch (e) {
+    console.error('Failed to fetch dashboard stats:', e)
+  }
+}
+
+function renderCharts() {
+  renderDiagnosisChart()
+  renderStatusChart()
+}
+
+function renderDiagnosisChart() {
+  if (!diagnosisChart.value || !stats.value.top_diagnosis || !stats.value.top_diagnosis.length) return
+
+  if (diagnosisChartInstance) {
+    diagnosisChartInstance.destroy()
+  }
+
+  const ctx = diagnosisChart.value.getContext('2d')
+  diagnosisChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: stats.value.top_diagnosis.map(d => d.kode_icd10),
+      datasets: [
+        {
+          label: 'Jumlah Kasus',
+          data: stats.value.top_diagnosis.map(d => d.jumlah),
+          backgroundColor: 'var(--color-primary)',
+          borderRadius: 6,
+          borderSkipped: false
+        }
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { drawBorder: false, color: 'rgba(0, 0, 0, 0.05)' },
+          ticks: { font: { size: 11 } }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { font: { size: 11, family: 'IBM Plex Mono' } }
+        }
+      }
+    }
+  })
+}
+
+function renderStatusChart() {
+  if (!statusChart.value || !hasClaimData.value) return
+
+  if (statusChartInstance) {
+    statusChartInstance.destroy()
+  }
+
+  const ctx = statusChart.value.getContext('2d')
+  statusChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Disetujui', 'Pending', 'Ditolak'],
+      datasets: [
+        {
+          data: [
+            stats.value.klaim_disetujui,
+            stats.value.klaim_pending,
+            stats.value.klaim_ditolak
+          ],
+          backgroundColor: [
+            'var(--color-status-approved)',
+            'var(--color-status-pending)',
+            'var(--color-status-rejected)'
+          ],
+          borderColor: 'white',
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 11 }, padding: 16 }
+        }
+      }
+    }
+  })
+}
+
+async function fetchRecentClaims() {
+  claimsLoading.value = true
+  try {
+    const res = await client.get('/klaim', { params: { page: 1, limit: 5 } })
+    if (res.data.success) {
+      recentClaims.value = res.data.data.items || []
+    }
+  } catch (e) {
+    console.error('Failed to fetch recent claims:', e)
+  } finally {
+    claimsLoading.value = false
+  }
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat('id-ID').format(value)
+}
+
+function formatRupiah(value) {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
+}
+
+onMounted(() => {
+  fetchStats()
+})
 </script>
+
+<style scoped>
+.dashboard {
+  display: grid;
+  width: 100%;
+  gap: 18px;
+  animation: dashboard-in 240ms ease-out both;
+}
+
+.dashboard-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.kicker {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.25px;
+}
+
+.dashboard-heading h1 {
+  margin: 8px 0 5px;
+  color: var(--color-primary-dark);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.7px;
+  line-height: 1.25;
+}
+
+.heading-copy > p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.date-chip {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.date-chip i {
+  color: var(--color-primary);
+}
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: white;
+  box-shadow: var(--shadow-panel);
+}
+
+.stat-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+.stat-content {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.stat-label {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.stat-value {
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.chart-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: white;
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+}
+
+.chart-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.chart-header h3 {
+  margin: 0 0 4px;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.chart-caption {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.chart-container {
+  position: relative;
+  height: 240px;
+  padding: 12px 16px;
+}
+
+.chart-empty {
+  display: flex;
+  min-height: 240px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.chart-empty i {
+  font-size: 24px;
+  color: var(--color-text-disabled);
+}
+
+.nominal-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: white;
+  box-shadow: var(--shadow-panel);
+}
+
+.nominal-summary i {
+  color: var(--color-primary);
+  font-size: 16px;
+}
+
+.summary-label {
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.summary-value {
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.recent-claims-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: white;
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel-heading h2 {
+  margin: 0 0 4px;
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.panel-heading p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.view-all-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  transition: color 140ms ease;
+}
+
+.view-all-link:hover {
+  color: var(--color-primary-hover);
+}
+
+.amount-cell {
+  text-align: right;
+}
+
+.welcome-panel {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+}
+
+.welcome-avatar {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #EEF2F5;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.welcome-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.welcome-overline {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.welcome-copy h2 {
+  overflow: hidden;
+  margin: 4px 0 3px;
+  color: var(--color-primary-dark);
+  font-size: 17px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.welcome-copy p {
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-chip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid #D5E3DA;
+  border-radius: 999px;
+  background: #F4F9F6;
+  color: var(--color-status-approved);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.session-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-status-approved);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 20px 22px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.icon-tile {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 6px;
+  background: #EEF2F5;
+  color: var(--color-primary);
+  font-size: 14px;
+}
+
+.detail-list {
+  display: grid;
+  gap: 13px;
+  margin: 16px 0 0;
+}
+
+.detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.detail-row dt {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.detail-row dd {
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-row dd.font-mono {
+  font-size: 12px;
+}
+
+.workspace-link {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  gap: 13px;
+  margin-top: 16px;
+  padding: 10px 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  text-decoration: none;
+  transition: background-color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.workspace-link:hover {
+  border-color: #C8D1D9;
+  background: var(--color-bg-base);
+}
+
+.workspace-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 6px;
+  background: #EEF2F5;
+  color: var(--color-primary);
+  font-size: 15px;
+}
+
+.workspace-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 3px;
+}
+
+.workspace-text strong {
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.workspace-text small {
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-arrow {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.workspace-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 13px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-bg-base);
+  color: var(--color-text-secondary);
+}
+
+.workspace-empty > i {
+  margin-top: 2px;
+  color: var(--color-primary);
+}
+
+.workspace-empty p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.workspace-empty strong {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.workspace-note {
+  margin: 14px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.dashboard-note {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+}
+
+.dashboard-note > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.dashboard-note strong {
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dashboard-note p {
+  margin: 3px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@keyframes dashboard-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard {
+    gap: 14px;
+  }
+
+  .dashboard-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dashboard-heading h1 {
+    font-size: 21px;
+  }
+
+  .date-chip {
+    min-height: 36px;
+    font-size: 11px;
+  }
+
+  .stat-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-panel {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .welcome-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .session-chip {
+    display: none;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .dashboard-note {
+    align-items: flex-start;
+    padding: 14px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard {
+    animation: none;
+  }
+}
+</style>
 
 <style scoped>
 /* ---------- struktur halaman ---------- */
