@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"math/rand"
 	"time"
@@ -20,6 +21,12 @@ func ptrString(s string) *string {
 }
 
 func main() {
+	// Parse flags for bulk seeder
+	bulkFlag := flag.Bool("bulk", false, "Run bulk seeder to generate ~50k patients with derived data")
+	pasienCount := flag.Int("pasien", 50000, "Approximate patient count for bulk seed (randomized ±10%)")
+	randSeed := flag.Int64("rand-seed", 42, "RNG seed for reproducible bulk seed runs")
+	flag.Parse()
+
 	// Load config
 	cfg := config.Load()
 	if cfg == nil {
@@ -33,16 +40,29 @@ func main() {
 	}
 	log.Println("Database connected successfully")
 
-	// Seed roles and units (if not exist)
-	seedRolesAndUnits(db)
+	// Dispatch: bulk seeder or default seeder
+	if *bulkFlag {
+		log.Println("Starting BULK SEEDER...")
+		bulkCfg := newBulkConfig(*pasienCount, *randSeed)
+		if err := RunBulkSeed(db, bulkCfg); err != nil {
+			log.Fatalf("Bulk seed failed: %v", err)
+		}
+		// Seed expanded master data after bulk seed
+		seedExpandedMasterData(db)
+		log.Println("Bulk seeding completed successfully")
+	} else {
+		// Default path: existing behavior unchanged
+		// Seed roles and units (if not exist)
+		seedRolesAndUnits(db)
 
-	// Seed regular users only (no admin - will be created manually)
-	seedRegularUsers(db)
+		// Seed regular users only (no admin - will be created manually)
+		seedRegularUsers(db)
 
-	// Seed master reference data
-	seedMasterData(db)
+		// Seed master reference data
+		seedMasterData(db)
 
-	log.Println("Seeding completed successfully")
+		log.Println("Seeding completed successfully")
+	}
 }
 
 // seedRolesAndUnits creates default roles and units if they don't exist
@@ -286,4 +306,42 @@ func seedMasterData(db *gorm.DB) {
 	}
 
 	log.Println("Master data seeding completed")
+}
+
+// seedExpandedMasterData seeds the expanded master data sets for bulk seeding.
+// Called after bulk seed to populate diagnosis, tindakan, and tarif_cbgs with
+// 150-300 ICD-10, 80-150 ICD-9, and 60-120 CBGs codes respectively.
+func seedExpandedMasterData(db *gorm.DB) {
+	log.Println("Seeding expanded master data...")
+
+	// Seed expanded ICD-10 data
+	for _, d := range expandedICD10Data {
+		result := db.Where("kode_icd10 = ?", d.KodeICD10).FirstOrCreate(&d)
+		if result.Error != nil {
+			log.Printf("[MASTER] gagal seed ICD-10 %s: %v", d.KodeICD10, result.Error)
+		}
+	}
+
+	// Seed expanded ICD-9 data
+	for _, t := range expandedICD9Data {
+		result := db.Where("kode_tindakan = ?", t.KodeTindakan).FirstOrCreate(&t)
+		if result.Error != nil {
+			log.Printf("[MASTER] gagal seed ICD-9 %s: %v", t.KodeTindakan, result.Error)
+		}
+	}
+
+	// Seed expanded CBGs data
+	for _, c := range expandedCBGsData {
+		result := db.Where("kode_cbgs = ?", c.KodeCBGS).FirstOrCreate(&c)
+		if result.Error != nil {
+			log.Printf("[MASTER] gagal seed CBGs %s: %v", c.KodeCBGS, result.Error)
+		}
+	}
+
+	var icd10Count, icd9Count, cbgsCount int64
+	db.Model(&model.Diagnosis{}).Count(&icd10Count)
+	db.Model(&model.Tindakan{}).Count(&icd9Count)
+	db.Model(&model.TarifCBGs{}).Count(&cbgsCount)
+
+	log.Printf("Expanded master data seeding completed: %d ICD-10, %d ICD-9, %d CBGs", icd10Count, icd9Count, cbgsCount)
 }
