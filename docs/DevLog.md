@@ -4,6 +4,60 @@
 
 ---
 
+## [2026-10-15 12:41 WIB] — Fix dependency hilang di container + entrypoint sinkronisasi otomatis
+
+- **Agent:** Hermes (SSERAPHIM)
+- **Tipe:** Fix Bug
+- **Status:** Selesai
+- **Modul:** Frontend / Docker Infrastructure
+- **File terdampak:**
+  - `frontend/Dockerfile` (CMD diganti ENTRYPOINT + script sinkronisasi)
+  - `frontend/docker-entrypoint.sh` (baru)
+  - `frontend/src/views/PasienView.vue` (fix template literal di atribut, + import computed)
+- **Deskripsi:**
+  Memperbaiki dua bug yang muncul setelah BRIEF 2 di-apply.
+
+  **Bug 1 — `Failed to resolve import "chart.js"`.** Vite gagal mentransform
+  `DashboardView.vue` karena `chart.js` tidak ada di dalam container, padahal
+  sudah terdaftar di `package.json` dan terpasang di host. Root cause: compose
+  memasang named volume `nexa_node_modules` di atas `/app/node_modules`, sehingga
+  volume itu **menutupi** node_modules hasil build image dan isinya beku sejak
+  volume pertama dibuat (13 hari lalu, sebelum `chart.js` ditambahkan). Workaround
+  `npm install` di `CMD` sebelumnya tidak menolong karena hanya jalan saat boot:
+  container start pukul 10:44, sedangkan `package.json` diubah pukul 11:48.
+
+  **Bug 2 — `Error parsing JavaScript expression: Unterminated template`.**
+  Setelah bug 1 teratasi, Vite lanjut ke error berikutnya: `PasienView.vue:110`
+  menaruh template literal berisi escaped quote (`\"`) langsung di atribut
+  `:message`. Compiler Vue tidak bisa mem-parse-nya. Diperbaiki dengan memindahkan
+  string ke `computed` di `<script setup>` — mengikuti konvensi yang sudah dipakai
+  `AdminView.vue` (`deleteConfirmMessage`).
+
+  **Perbaikan permanen.** `frontend/Dockerfile` diubah dari `CMD ["sh","-c","npm install && ..."]`
+  menjadi `ENTRYPOINT` yang memanggil `docker-entrypoint.sh`. Script itu menghitung
+  md5 dari `package.json` **dan** `package-lock.json` lalu membandingkannya dengan
+  stamp di `/app/node_modules/.deps-hash`; `npm install` hanya dijalankan bila hash
+  berubah. Restart biasa tetap cepat (terverifikasi skip install), sementara
+  dependency baru langsung tersinkron tanpa perlu menghapus volume atau kehilangan
+  data database.
+
+  Catatan desain: versi pertama script hanya memantau `package-lock.json`. Saat
+  diuji, celah itu nyata — mengubah `package.json` tanpa regenerasi lock tidak
+  terdeteksi. Script direvisi memantau kedua file.
+
+- **Error/Kendala:**
+  1. `[plugin:vite:import-analysis] Failed to resolve import "chart.js" from "src/views/DashboardView.vue"` — named volume menutupi node_modules image, dependency baru tidak pernah terpasang.
+  2. `Error parsing JavaScript expression: Unterminated template (1:2)` pada `PasienView.vue:110:19` — template literal dengan escaped quote di atribut template Vue.
+  3. Versi awal `docker-entrypoint.sh` hanya memantau lockfile; celah ini ditemukan lewat regression test dan ditutup sebelum finalisasi.
+
+- **Next Step:**
+  Jalankan `docker compose exec frontend npm install` (atau restart frontend) setiap
+  kali `package.json` berubah — sekarang otomatis. Verifikasi visual halaman
+  Dashboard (chart) dan Pasien (dialog hapus) di browser; `vite build` sudah lolos
+  dan kedua service merespons HTTP 200.
+
+---
+
 ## [2026-10-15 12:05 WIB] — Implementasi BRIEF 2: Halaman Data & Navigasi Berbasis Peran
 
 - **Agent:** C

@@ -7,9 +7,14 @@ RUN npm install
 
 COPY . .
 
+# node_modules dipasang sebagai named volume oleh docker-compose, sehingga
+# menutupi node_modules hasil build image ini. Entrypoint menyinkronkan ulang
+# dependency ketika package-lock.json berubah, supaya dependency baru
+# (mis. chart.js) benar-benar terpasang tanpa perlu hapus volume.
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 EXPOSE 5173
 
-# node_modules is bind-mounted as an anonymous/named volume by docker-compose,
-# which masks the image's node_modules. Re-sync on every start so newly added
-# deps in package.json (e.g. primeicons) are actually present.
-CMD ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
