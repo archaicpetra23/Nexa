@@ -10,6 +10,7 @@ type RekamMedisRepository interface {
 	Create(rekam *model.RekamMedis) error
 	FindByID(id uint) (*model.RekamMedis, error)
 	FindByPasienID(pasienID uint, page, limit int) ([]model.RekamMedis, int64, error)
+	FindAll(page, limit int) ([]model.RekamMedis, int64, error)
 	Update(rekam *model.RekamMedis) error
 	SoftDelete(id uint) error
 	AddDiagnosis(diagnosis *model.RekamDiagnosis) error
@@ -50,6 +51,28 @@ func (r *rekamMedisRepository) FindByPasienID(pasienID uint, page, limit int) ([
 	offset := (page - 1) * limit
 
 	db := r.db.Where("id_pasien = ? AND deleted_at IS NULL", pasienID)
+
+	if err := db.Model(&model.RekamMedis{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if err := db.Preload("Pasien").Preload("Dokter").
+		Order("tanggal_kunjungan DESC").
+		Offset(offset).Limit(limit).
+		Find(&rekams).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return rekams, total, nil
+}
+
+func (r *rekamMedisRepository) FindAll(page, limit int) ([]model.RekamMedis, int64, error) {
+	var rekams []model.RekamMedis
+	var total int64
+
+	offset := (page - 1) * limit
+
+	db := r.db.Where("deleted_at IS NULL")
 
 	if err := db.Model(&model.RekamMedis{}).Count(&total).Error; err != nil {
 		return nil, 0, err

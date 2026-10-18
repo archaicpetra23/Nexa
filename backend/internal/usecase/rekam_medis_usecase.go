@@ -18,6 +18,7 @@ type RekamMedisUsecase interface {
 	CreateRekamMedis(rekam *model.RekamMedis, userID uint) error
 	GetRekamMedisByID(id uint, userID uint, role string) (*model.RekamMedis, error)
 	GetRekamMedisByPasien(pasienID uint, page, limit int) ([]model.RekamMedis, int64, error)
+	GetAllRekamMedis(page, limit int) ([]model.RekamMedis, int64, error)
 	UpdateRekamMedis(rekam *model.RekamMedis, userID uint, role string) error
 	DeleteRekamMedis(id uint, userID uint, role string) error
 	AddDiagnosis(rekamID uint, diagnosis *model.RekamDiagnosis, userID uint, role string) error
@@ -61,6 +62,16 @@ func (uc *rekamMedisUsecase) GetRekamMedisByPasien(pasienID uint, page, limit in
 		limit = 10
 	}
 	return uc.repo.FindByPasienID(pasienID, page, limit)
+}
+
+func (uc *rekamMedisUsecase) GetAllRekamMedis(page, limit int) ([]model.RekamMedis, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+	return uc.repo.FindAll(page, limit)
 }
 
 func (uc *rekamMedisUsecase) UpdateRekamMedis(rekam *model.RekamMedis, userID uint, role string) error {

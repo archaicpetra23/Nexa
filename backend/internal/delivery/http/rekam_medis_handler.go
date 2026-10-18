@@ -45,7 +45,15 @@ func (h *RekamMedisHandler) ListRekam(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
-	rekams, total, err := h.usecase.GetRekamMedisByPasien(uint(pasienID), page, limit)
+	var rekams []model.RekamMedis
+	var total int64
+	var err error
+
+	if pasienID > 0 {
+		rekams, total, err = h.usecase.GetRekamMedisByPasien(uint(pasienID), page, limit)
+	} else {
+		rekams, total, err = h.usecase.GetAllRekamMedis(page, limit)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
