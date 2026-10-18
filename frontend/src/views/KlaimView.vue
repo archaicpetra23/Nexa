@@ -205,7 +205,6 @@ async function fetchKlaim() {
     if (res.data.success) {
       klaimList.value = res.data.data.items || []
       total.value = res.data.data.total || 0
-      updateStats()
     }
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal memuat data klaim', life: 3000 })
@@ -214,13 +213,19 @@ async function fetchKlaim() {
   }
 }
 
-function updateStats() {
-  stats.value = { pending: 0, disetujui: 0, ditolak: 0 }
-  klaimList.value.forEach(k => {
-    if (k.status_klaim === 'pending') stats.value.pending++
-    else if (k.status_klaim === 'disetujui') stats.value.disetujui++
-    else if (k.status_klaim === 'ditolak') stats.value.ditolak++
-  })
+async function updateStats() {
+  try {
+    const res = await client.get('/dashboard/stats')
+    if (res.data.success) {
+      stats.value = {
+        pending: res.data.data.klaim_pending,
+        disetujui: res.data.data.klaim_disetujui,
+        ditolak: res.data.data.klaim_ditolak
+      }
+    }
+  } catch (e) {
+    console.error('Gagal memuat statistik klaim:', e)
+  }
 }
 
 async function fetchCBGS() {
@@ -367,6 +372,7 @@ function formatRupiah(value) {
 }
 
 fetchKlaim()
+updateStats()
 fetchCBGS()
 </script>
 
@@ -387,15 +393,16 @@ fetchCBGS()
 .page-kicker {
   display: block;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1.25px;
+  text-transform: uppercase;
 }
 
 .page-header h1 {
   margin: 8px 0 5px;
   color: var(--color-primary-dark);
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   letter-spacing: -0.7px;
 }
@@ -403,7 +410,7 @@ fetchCBGS()
 .page-header p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .stat-strip {
@@ -424,12 +431,12 @@ fetchCBGS()
 
 .stat-label {
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   font-family: var(--font-mono);
 }
@@ -440,7 +447,7 @@ fetchCBGS()
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: white;
 }
 
@@ -453,7 +460,7 @@ fetchCBGS()
   gap: 10px;
   padding: 0 12px;
   border: 1px solid #dfe3e6;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: #fbfcfc;
   color: #7b8790;
 }
@@ -490,7 +497,7 @@ fetchCBGS()
   color: white;
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   transition: background-color 140ms ease;
@@ -504,10 +511,10 @@ fetchCBGS()
   display: inline-block;
   padding: 4px 9px;
   border: 1px solid #dce4ea;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: #f5f8fa;
   color: var(--color-primary-dark);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 
@@ -549,12 +556,12 @@ fetchCBGS()
 
 .field-error {
   color: #B54245;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .field-hint {
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 @media (max-width: 900px) {
