@@ -51,14 +51,14 @@ func newBulkConfig(targetPatients int, randSeed int64) *BulkConfig {
 	return &BulkConfig{
 		TargetPatients:    targetPatients,
 		RandSeed:          randSeed,
-		RekamMedisBandMin: 0.60,
-		RekamMedisBandMax: 0.90,
+		RekamMedisBandMin: 1.00,
+		RekamMedisBandMax: 1.05,
 		DiagnosisBandMin:  1.00,
 		DiagnosisBandMax:  1.40,
 		TindakanBandMin:   1.00,
 		TindakanBandMax:   1.40,
-		KlaimBandMin:      0.40,
-		KlaimBandMax:      0.70,
+		KlaimBandMin:      1.00,
+		KlaimBandMax:      1.00,
 		BatchSize:         500,
 	}
 }
