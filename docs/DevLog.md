@@ -4,6 +4,57 @@
 
 ---
 
+## [2026-10-18 15:50 WIB] — Fix Chart Dashboard, Seed Error, dan Rekonfigurasi Seeder
+
+- **Agent:** Hermes (SSERAPHIM)
+- **Tipe:** Fix Bug + Konfigurasi Ulang Seeder
+- **Status:** Selesai
+- **Modul:** Backend (Seeder), Frontend (Dashboard), Docker Infrastructure
+- **File terdampak:**
+  - `frontend/src/views/DashboardView.vue` (import nextTick, await sebelum render chart)
+  - `backend/cmd/seed/main.go` (.Error check, seedAdminUser, seedAuditTrail, seedRegularUsers 25 user random role)
+  - `backend/cmd/seed/bulk.go` (range 47k-51k, status klaim weighted random, helper weightedRandom)
+  - `docker-compose.yml` (hapus version obsolete)
+- **Deskripsi:**
+  Bug testing menyeluruh menemukan 3 bug HIGH yang diperbaiki, lalu seeder dikonfigurasi ulang sesuai spec baru.
+
+  **Bug 1 — Chart tidak muncul di Dashboard.** Race condition di DashboardView.vue: `fetchStats()` memanggil `renderCharts()` secara sinkron setelah assignment `stats.value`, padahal Vue belum re-render DOM sehingga `<canvas ref="diagnosisChart">` masih null saat Chart.js pakai. Fix: tambah `await nextTick()` sebelum `renderCharts()`. API `/dashboard/stats` sudah return data benar (top_diagnosis 10 entries, klaim counts valid).
+
+  **Bug 2 — Seeding error: roles tidak ditemukan.** `seedRegularUsers()` memanggil `db.Where("nama_role = ?", roleName).First(&role)` tanpa `.Error`. GORM `First()` tidak return error by default (hanya set kondisi internal `record not found`), sehingga loop `continue` tidak pernah trigger dan semua user creation di-skip dengan message "role not found" padahal role ada di DB. Fix: tambah `.Error`.
+
+  **Bug 3 — Bulk seed gagal: "no dokter_dpjp users found".** Flow salah: `RunBulkSeed()` query `dokter_dpjp` dan `petugas_casemix` users, tapi dijalankan tanpa regular seed dulu sehingga tabel users kosong. Fix: seed admin user otomatis via `seedAdminUser()` sebelum regular seed; dokumentasi README sudah benar.
+
+  **Bug 4 — Admin user tidak pernah di-seed.** Sebelumnya admin dibuat manual. Fix: `seedAdminUser()` otomatis buat admin default (username `admin`, password `password123`) jika belum ada.
+
+  **Konfigurasi ulang seeder (permintaan user):**
+  - `seedRegularUsers()`: 25 user non-admin dengan role acak (bukan 1 per role). Total users setelah seed: 1 admin + 25 random + 6 existing = 32.
+  - Range pasien: 47,000-51,000 (randomized ±~4% dari target 49,000, default `--pasien` diubah dari 50000 ke 49000).
+  - Status klaim: acak berbobot — condong ke disetujui (55%), bukan fix 70%. Bobot: draft 10%, pending 15%, disetujui 55%, ditolak 20%. Distribusi hasil: disetujui 54.5%, ditolak 20.4%, pending 15.0%, draft 10.1%.
+  - Audit trail: 100 log aktivitas acak (tabel: pasien/rekam_medis/rekam_diagnosis/klaim/users/diagnosis/tindakan; aktivitas: INSERT/UPDATE/DELETE; waktu acak 30 hari terakhir).
+  - Helper baru: `weightedRandom()` di bulk.go untuk weighted random selection.
+
+  **Catatan build frontend:** Sebelumnya (session kemarin) `vite build` menghasilkan warning chunk >500 kB (925 kB main bundle) tapi tidak di-log ke DevLog. Catatan ini ditambahkan sekarang. Chunk size warning tidak memblokir build tapi bisa dioptimasi dengan code-splitting di kemudian hari.
+
+- **Verifikasi dari nol (docker compose down -v && docker compose up -d --build):**
+  - Backend build: OK
+  - Frontend build: OK (vite build 4.20s)
+  - Regular seed: OK (admin + 25 users + master data)
+  - Bulk seed: OK — 49,864 pasien, 30,905 rekam_medis, 38,372 diagnosis, 33,486 tindakan, 12,768 klaim, total 165,395 rows dalam 1.23s
+  - Audit trail: 101 entries (100 acak + 1 summary)
+  - Dashboard API return data benar
+
+- **Error/Kendala:**
+  - Patch pertama ke main.go menyebabkan duplicate import (`fmt`, `math/rand`, `time` ter-import dua kali). Deteksi via LSP compiler error, langsung diperbaiki.
+  - `seedAuditTrail` awalnya pakai variabel `user` yang shadowing package `models.User` — diganti ke `u`.
+  - `weightedRandom` semula dipakai tanpa dideklarasikan — ditambahkan implementasinya di bulk.go.
+
+- **Next Step:**
+  - Optional: code-split frontend untuk kurangi chunk size (main bundle 925 kB)
+  - Optional: apply 002_performance_indexes.sql untuk optimasi search 50k+ rows
+  - Test visual chart di browser (perlu install Chromium untuk browser testing)
+
+---
+
 ## [2026-10-15 13:06 WIB] — Implementasi Bulk Demo-Data Seeder: 50,000 Pasien dengan Derived Data
 
 - **Agent:** Claude Code (Fable 5)

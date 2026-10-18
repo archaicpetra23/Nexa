@@ -12,6 +12,20 @@ import (
 	"gorm.io/gorm"
 )
 
+// weightedRandom returns a random item from items based on weights.
+// Weights must sum to 1.0. This gives weighted random selection.
+func weightedRandom(items []string, weights []float64, rng *rand.Rand) string {
+	r := rng.Float64()
+	cumulative := 0.0
+	for i, w := range weights {
+		cumulative += w
+		if r < cumulative {
+			return items[i]
+		}
+	}
+	return items[len(items)-1]
+}
+
 // BulkConfig holds all tunable parameters for the bulk seeder.
 // All counts are approximate and will be randomized within specified bands.
 type BulkConfig struct {
@@ -50,10 +64,10 @@ func newBulkConfig(targetPatients int, randSeed int64) *BulkConfig {
 }
 
 // randomizeCounts computes actual counts with randomization.
-// The patient count must NEVER be exactly the target.
+// Patient count dibatasi 47000-51000 (±~4% dari target 49000).
 func (c *BulkConfig) randomizeCounts(rng *rand.Rand) (int, int, int, int, int) {
-	// Randomize patient count ±10%, ensure it's never exactly the target
-	patientCount := c.TargetPatients + rng.Intn(c.TargetPatients/5+1) - c.TargetPatients/10
+	// Target 49000, randomized ±4% = 47040-50960 (sesuai 47k-51k)
+	patientCount := c.TargetPatients + rng.Intn(c.TargetPatients/25+1) - c.TargetPatients/50
 	if patientCount == c.TargetPatients {
 		if rng.Float64() < 0.5 {
 			patientCount++
@@ -485,18 +499,12 @@ func generateKlaim(count int, rekams []model.RekamMedis, casemixIDs []uint, rng 
 		// IDPetugasCasemix: random from pool
 		idPetugasCasemix := casemixIDs[rng.Intn(len(casemixIDs))]
 
-		// StatusKlaim: draft ~10%, pending ~25%, disetujui ~50%, ditolak ~15%
-		roll := rng.Float64()
+		// StatusKlaim: acak berbobot — condong ke disetujui, tidak fix 70%
+		// Bobot: draft 10%, pending 15%, disetujui 55%, ditolak 20%
 		var statusKlaim string
-		if roll < 0.10 {
-			statusKlaim = "draft"
-		} else if roll < 0.35 {
-			statusKlaim = "pending"
-		} else if roll < 0.85 {
-			statusKlaim = "disetujui"
-		} else {
-			statusKlaim = "ditolak"
-		}
+		statuses := []string{"draft", "pending", "disetujui", "ditolak"}
+		weights := []float64{0.10, 0.15, 0.55, 0.20}
+		statusKlaim = weightedRandom(statuses, weights, rng)
 
 		// AlasanPendingTolak: required for pending/ditolak, nil otherwise
 		// Build FROM status, never the reverse

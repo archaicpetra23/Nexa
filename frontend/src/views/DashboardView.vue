@@ -220,7 +220,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import DefaultLayout from '../layouts/DefaultLayout.vue'
 import ModernTable from '../components/ModernTable.vue'
@@ -303,6 +303,7 @@ async function fetchStats() {
     const res = await client.get('/dashboard/stats')
     if (res.data.success) {
       stats.value = res.data.data
+      await nextTick()
       renderCharts()
       fetchRecentClaims()
     }
@@ -447,15 +448,16 @@ onMounted(() => {
 .kicker {
   display: block;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1.25px;
+  text-transform: uppercase;
 }
 
 .dashboard-heading h1 {
   margin: 8px 0 5px;
   color: var(--color-primary-dark);
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   letter-spacing: -0.7px;
   line-height: 1.25;
@@ -464,7 +466,7 @@ onMounted(() => {
 .heading-copy > p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .date-chip {
@@ -477,7 +479,7 @@ onMounted(() => {
   border-radius: var(--radius-base);
   background: var(--color-surface);
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   white-space: nowrap;
 }
 
@@ -508,8 +510,8 @@ onMounted(() => {
   height: 44px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 8px;
-  font-size: 18px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-xl);
 }
 
 .stat-content {
@@ -520,13 +522,13 @@ onMounted(() => {
 
 .stat-label {
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 500;
 }
 
 .stat-value {
   color: var(--color-text-primary);
-  font-size: 18px;
+  font-size: var(--text-xl);
   font-weight: 700;
 }
 
@@ -552,13 +554,13 @@ onMounted(() => {
 .chart-header h3 {
   margin: 0 0 4px;
   color: var(--color-text-primary);
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 
 .chart-caption {
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .chart-container {
@@ -580,7 +582,7 @@ onMounted(() => {
 }
 
 .chart-empty i {
-  font-size: 24px;
+  font-size: var(--text-2xl);
   color: var(--color-text-disabled);
 }
 
@@ -597,18 +599,18 @@ onMounted(() => {
 
 .nominal-summary i {
   color: var(--color-primary);
-  font-size: 16px;
+  font-size: var(--text-lg);
 }
 
 .summary-label {
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
 }
 
 .summary-value {
   color: var(--color-text-primary);
-  font-size: 16px;
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 
@@ -632,20 +634,20 @@ onMounted(() => {
 .panel-heading h2 {
   margin: 0 0 4px;
   color: var(--color-text-primary);
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 
 .panel-heading p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .view-all-link {
   color: var(--color-primary);
   text-decoration: none;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   transition: color 140ms ease;
 }
@@ -679,7 +681,7 @@ onMounted(() => {
   border-radius: 50%;
   background: #EEF2F5;
   color: var(--color-primary);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
 }
 
@@ -691,16 +693,17 @@ onMounted(() => {
 .welcome-overline {
   display: block;
   color: var(--color-text-secondary);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .welcome-copy h2 {
   overflow: hidden;
   margin: 4px 0 3px;
   color: var(--color-primary-dark);
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -710,7 +713,7 @@ onMounted(() => {
   overflow: hidden;
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -725,7 +728,7 @@ onMounted(() => {
   border-radius: 999px;
   background: #F4F9F6;
   color: var(--color-status-approved);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -769,10 +772,10 @@ onMounted(() => {
   height: 36px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #EEF2F5;
   color: var(--color-primary);
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .detail-list {
@@ -791,14 +794,14 @@ onMounted(() => {
 .detail-row dt {
   flex: 0 0 auto;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .detail-row dd {
   overflow: hidden;
   margin: 0;
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   text-align: right;
   text-overflow: ellipsis;
@@ -806,7 +809,7 @@ onMounted(() => {
 }
 
 .detail-row dd.font-mono {
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .workspace-link {
@@ -836,7 +839,7 @@ onMounted(() => {
   border-radius: 6px;
   background: #EEF2F5;
   color: var(--color-primary);
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .workspace-text {
@@ -848,14 +851,14 @@ onMounted(() => {
 
 .workspace-text strong {
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
 .workspace-text small {
   overflow: hidden;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -863,7 +866,7 @@ onMounted(() => {
 .workspace-arrow {
   flex: 0 0 auto;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .workspace-empty {
@@ -885,7 +888,7 @@ onMounted(() => {
 
 .workspace-empty p {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.6;
 }
 
@@ -897,7 +900,7 @@ onMounted(() => {
 .workspace-note {
   margin: 14px 0 0;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   line-height: 1.65;
 }
 
@@ -919,14 +922,14 @@ onMounted(() => {
 
 .dashboard-note strong {
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
 .dashboard-note p {
   margin: 3px 0 0;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   line-height: 1.6;
 }
 
@@ -969,7 +972,7 @@ onMounted(() => {
 
   .date-chip {
     min-height: 36px;
-    font-size: 11px;
+    font-size: var(--text-2xs);
   }
 
   .stat-cards {
@@ -1026,15 +1029,16 @@ onMounted(() => {
 .kicker {
   display: block;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1.25px;
+  text-transform: uppercase;
 }
 
 .dashboard-heading h1 {
   margin: 8px 0 5px;
   color: var(--color-primary-dark);
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   letter-spacing: -0.7px;
   line-height: 1.25;
@@ -1043,7 +1047,7 @@ onMounted(() => {
 .heading-copy > p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .date-chip {
@@ -1056,7 +1060,7 @@ onMounted(() => {
   border-radius: var(--radius-base);
   background: var(--color-surface);
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   white-space: nowrap;
 }
 
@@ -1086,7 +1090,7 @@ onMounted(() => {
   border-radius: 50%;
   background: #EEF2F5;
   color: var(--color-primary);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
 }
 
@@ -1098,16 +1102,17 @@ onMounted(() => {
 .welcome-overline {
   display: block;
   color: var(--color-text-secondary);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .welcome-copy h2 {
   overflow: hidden;
   margin: 4px 0 3px;
   color: var(--color-primary-dark);
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1117,7 +1122,7 @@ onMounted(() => {
   overflow: hidden;
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1132,7 +1137,7 @@ onMounted(() => {
   border-radius: 999px;
   background: #F4F9F6;
   color: var(--color-status-approved);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -1184,10 +1189,10 @@ onMounted(() => {
   height: 36px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #EEF2F5;
   color: var(--color-primary);
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 /* ---------- daftar detail akun ---------- */
@@ -1207,14 +1212,14 @@ onMounted(() => {
 .detail-row dt {
   flex: 0 0 auto;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .detail-row dd {
   overflow: hidden;
   margin: 0;
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   text-align: right;
   text-overflow: ellipsis;
@@ -1222,7 +1227,7 @@ onMounted(() => {
 }
 
 .detail-row dd.font-mono {
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 /* ---------- tautan ruang kerja ---------- */
@@ -1253,7 +1258,7 @@ onMounted(() => {
   border-radius: 6px;
   background: #EEF2F5;
   color: var(--color-primary);
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .workspace-text {
@@ -1265,14 +1270,14 @@ onMounted(() => {
 
 .workspace-text strong {
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
 .workspace-text small {
   overflow: hidden;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1280,7 +1285,7 @@ onMounted(() => {
 .workspace-arrow {
   flex: 0 0 auto;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .workspace-empty {
@@ -1302,7 +1307,7 @@ onMounted(() => {
 
 .workspace-empty p {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.6;
 }
 
@@ -1314,7 +1319,7 @@ onMounted(() => {
 .workspace-note {
   margin: 14px 0 0;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   line-height: 1.65;
 }
 
@@ -1337,14 +1342,14 @@ onMounted(() => {
 
 .dashboard-note strong {
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
 .dashboard-note p {
   margin: 3px 0 0;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   line-height: 1.6;
 }
 
@@ -1385,7 +1390,7 @@ onMounted(() => {
 
   .date-chip {
     min-height: 36px;
-    font-size: 11px;
+    font-size: var(--text-2xs);
   }
 
   .welcome-panel {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -23,7 +24,7 @@ func ptrString(s string) *string {
 func main() {
 	// Parse flags for bulk seeder
 	bulkFlag := flag.Bool("bulk", false, "Run bulk seeder to generate ~50k patients with derived data")
-	pasienCount := flag.Int("pasien", 50000, "Approximate patient count for bulk seed (randomized ±10%)")
+	pasienCount := flag.Int("pasien", 49000, "Approximate patient count for bulk seed (randomized ±4%, range 47k-51k)")
 	randSeed := flag.Int64("rand-seed", 42, "RNG seed for reproducible bulk seed runs")
 	flag.Parse()
 
@@ -49,13 +50,20 @@ func main() {
 		}
 		// Seed expanded master data after bulk seed
 		seedExpandedMasterData(db)
+
+		// Seed audit trail (100 aktivitas acak)
+		seedAuditTrail(db)
+
 		log.Println("Bulk seeding completed successfully")
 	} else {
 		// Default path: existing behavior unchanged
 		// Seed roles and units (if not exist)
 		seedRolesAndUnits(db)
 
-		// Seed regular users only (no admin - will be created manually)
+		// Seed admin user (default admin account)
+		seedAdminUser(db)
+
+		// Seed regular users
 		seedRegularUsers(db)
 
 		// Seed master reference data
@@ -98,43 +106,80 @@ func seedRolesAndUnits(db *gorm.DB) {
 	}
 }
 
-// seedRegularUsers creates users for non-admin roles only with random names
-func seedRegularUsers(db *gorm.DB) {
-	// Define non-admin roles (all except admin_ti)
-	nonAdminRoles := []string{
-		"petugas_rm",      // Petugas Registrasi & RM
-		"dokter_dpjp",     // Dokter Penanggung Jawab
-		"perawat",         // Perawat Bangsal / Poli
-		"petugas_casemix", // Koder & Verifikator Klaim
-		"keuangan",        // Staf Kasir / Keuangan RS
-		"manajemen",       // Direksi & Komite Medis
+// seedAdminUser creates the default admin account if it doesn't exist
+func seedAdminUser(db *gorm.DB) {
+	var existingUser models.User
+	if err := db.Where("username = ?", "admin").First(&existingUser).Error; err == nil {
+		log.Println("Admin user already exists, skipping")
+		return
 	}
 
-	// Get role IDs for mapping
-	var roleMap = make(map[string]uint)
+	// Get admin_ti role
+	var adminRole models.Role
+	if err := db.Where("nama_role = ?", "admin_ti").First(&adminRole).Error; err != nil {
+		log.Printf("Warning: Could not find admin_ti role: %v", err)
+		return
+	}
+
+	// Get default unit
+	var unit models.Unit
+	if err := db.Where("nama_unit = ?", "Unit Umum").First(&unit).Error; err != nil {
+		log.Printf("Warning: Could not find Unit Umum: %v", err)
+		return
+	}
+
+	passwordHash, err := pkg.HashPassword("password123")
+	if err != nil {
+		log.Printf("Failed to hash password for admin: %v", err)
+		return
+	}
+
+	admin := models.User{
+		Nama:         "Admin TI",
+		Profesi:      "IT",
+		Spesialisasi: ptrString("Sistem Informasi"),
+		Username:     "admin",
+		PasswordHash: passwordHash,
+		IDRole:       adminRole.IDRole,
+		IDUnit:       unit.IDUnit,
+	}
+
+	if err := db.Create(&admin).Error; err != nil {
+		log.Printf("Failed to create admin user: %v", err)
+		return
+	}
+	log.Println("Created admin user: admin (Role: admin_ti)")
+}
+
+// seedRegularUsers membuat 25 user non-admin dengan role acak
+func seedRegularUsers(db *gorm.DB) {
+	nonAdminRoles := []string{
+		"petugas_rm", "dokter_dpjp", "perawat",
+		"petugas_casemix", "keuangan", "manajemen",
+	}
+
+	// Map role name -> ID
+	roleMap := make(map[string]uint)
 	for _, roleName := range nonAdminRoles {
 		var role models.Role
-		if err := db.Where("nama_role = ?", roleName).First(&role); err != nil {
-			log.Printf("Warning: Could not find role %s: %v", roleName, err)
+		if err := db.Where("nama_role = ?", roleName).First(&role).Error; err != nil {
+			log.Printf("Warning: role %s not found: %v", roleName, err)
 			continue
 		}
 		roleMap[roleName] = role.IDRole
 	}
 
-	// Get unit ID (assuming "Unit Umum" exists)
 	var unit models.Unit
 	if err := db.Where("nama_unit = ?", "Unit Umum").First(&unit).Error; err != nil {
-		log.Fatalf("Failed to get unit 'Unit Umum': %v", err)
+		log.Fatalf("Failed to get unit: %v", err)
 	}
 
-	// First name and last name lists for random generation
 	firstNames := []string{
 		"Ahmad", "Budi", "Citra", "Dewi", "Eko", "Fani", "Gita", "Hadi",
 		"Indri", "Joko", "Kartika", "Lilis", "Maya", "Nina", "Oki", "Putri",
 		"Qori", "Rani", "Sari", "Tina", "Uli", "Vika", "Wati", "Xenia",
 		"Yoga", "Zara",
 	}
-
 	lastNames := []string{
 		"Santoso", "Wijaya", "Nugroho", "Prasetya", "Hidayat", "Firmansyah",
 		"Kusuma", "Lestari", "Maharani", "Pramudya", "Saputra", "Tambunan",
@@ -143,48 +188,32 @@ func seedRegularUsers(db *gorm.DB) {
 		"Julianto", "Kurniawan", "Lubis", "Mardi", "Nasution", "Oktaviani",
 	}
 
-	// Seed random number generator
-	rand.Seed(time.Now().UnixNano())
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	// Create one user per non-admin role with random name
-	for _, roleName := range nonAdminRoles {
+	for i := 0; i < 25; i++ {
+		// Role acak untuk tiap user
+		roleName := nonAdminRoles[rng.Intn(len(nonAdminRoles))]
 		roleID, ok := roleMap[roleName]
 		if !ok {
-			log.Printf("Skipping user creation for role %s (role not found)", roleName)
 			continue
 		}
 
-		// Generate random name
-		firstName := firstNames[rand.Intn(len(firstNames))]
-		lastName := lastNames[rand.Intn(len(lastNames))]
-		fullName := firstName + " " + lastName
+		firstName := firstNames[rng.Intn(len(firstNames))]
+		lastName := lastNames[rng.Intn(len(lastNames))]
+		username := fmt.Sprintf("%s%s%02d", firstName, lastName, i)
 
-		// Generate username (lowercase, no spaces)
-		username := firstName + lastName
-		// Ensure uniqueness by checking if exists and adding number if needed
-		var count int64
-		db.Model(&models.User{}).Where("username = ?", username).Count(&count)
-		if count > 0 {
-			username = username + "01" // Add suffix if duplicate
-		}
-
-		// Hash password (default password as per existing system)
-		passwordHash, err := pkg.HashPassword("password123")
-		if err != nil {
-			log.Printf("Failed to hash password for user %s: %v", username, err)
-			continue
-		}
-
-		// Check if user with this username already exists
 		var existingUser models.User
 		if err := db.Where("username = ?", username).First(&existingUser).Error; err == nil {
-			log.Printf("User %s already exists, skipping", username)
 			continue
 		}
 
-		// Create the user
+		passwordHash, err := pkg.HashPassword("password123")
+		if err != nil {
+			continue
+		}
+
 		user := models.User{
-			Nama:         fullName,
+			Nama:         firstName + " " + lastName,
 			Profesi:      getProfesiForRole(roleName),
 			Spesialisasi: ptrString(getSpesialisasiForRole(roleName)),
 			Username:     username,
@@ -197,9 +226,53 @@ func seedRegularUsers(db *gorm.DB) {
 			log.Printf("Failed to create user %s: %v", username, err)
 			continue
 		}
-
-		log.Printf("Created regular user: %s (%s) - Role: %s", username, fullName, roleName)
+		log.Printf("Created user: %s (%s) - Role: %s", username, user.Nama, roleName)
 	}
+}
+
+// seedAuditTrail membuat 100 log aktivitas acak
+func seedAuditTrail(db *gorm.DB) {
+	log.Println("Seeding audit trail (100 entries)...")
+
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	// Ambil semua user ID untuk referensi
+	var users []models.User
+	if err := db.Find(&users).Error; err != nil {
+		log.Printf("Warning: failed to load users for audit trail: %v", err)
+		return
+	}
+
+	if len(users) == 0 {
+		log.Println("Warning: no users found, skipping audit trail")
+		return
+	}
+
+	tables := []string{"pasien", "rekam_medis", "rekam_diagnosis", "klaim", "users", "diagnosis", "tindakan"}
+	activities := []string{"INSERT", "UPDATE", "DELETE"}
+
+	for i := 0; i < 100; i++ {
+		u := users[rng.Intn(len(users))]
+		tableName := tables[rng.Intn(len(tables))]
+		activity := activities[rng.Intn(len(activities))]
+
+		hoursAgo := rng.Intn(720)
+		waktu := time.Now().Add(-time.Duration(hoursAgo) * time.Hour)
+
+		logEntry := model.LogAktivitas{
+			IDUser:         &u.IDUser,
+			TabelTerdampak: tableName,
+			Aktivitas:      activity,
+			DataID:         nil,
+			Waktu:          waktu,
+		}
+
+		if err := db.Create(&logEntry).Error; err != nil {
+			log.Printf("Warning: failed to create audit log %d: %v", i, err)
+		}
+	}
+
+	log.Println("Audit trail seeding completed (100 entries)")
 }
 
 // getProfesiForRole returns appropriate profession for a role
