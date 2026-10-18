@@ -325,22 +325,36 @@ function renderDiagnosisChart() {
   }
 
   const ctx = diagnosisChart.value.getContext('2d')
+  const labels = stats.value.top_diagnosis.map(d => d.kode_icd10)
+  const data = stats.value.top_diagnosis.map(d => d.jumlah)
+
+  // Gradient fill untuk line chart
+  const gradient = ctx.createLinearGradient(0, 0, 0, 240)
+  gradient.addColorStop(0, 'rgba(28, 61, 90, 0.25)')
+  gradient.addColorStop(1, 'rgba(28, 61, 90, 0.02)')
+
   diagnosisChartInstance = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
-      labels: stats.value.top_diagnosis.map(d => d.kode_icd10),
+      labels: labels,
       datasets: [
         {
           label: 'Jumlah Kasus',
-          data: stats.value.top_diagnosis.map(d => d.jumlah),
-          backgroundColor: 'var(--color-primary)',
-          borderRadius: 6,
-          borderSkipped: false
+          data: data,
+          borderColor: '#1C3D5A',
+          backgroundColor: gradient,
+          borderWidth: 2.5,
+          pointBackgroundColor: '#1C3D5A',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          fill: true,
+          tension: 0.3
         }
       ]
     },
     options: {
-      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: true,
       plugins: {
@@ -350,11 +364,12 @@ function renderDiagnosisChart() {
         x: {
           beginAtZero: true,
           grid: { drawBorder: false, color: 'rgba(0, 0, 0, 0.05)' },
-          ticks: { font: { size: 11 } }
+          ticks: { font: { size: 11, family: 'IBM Plex Mono' } }
         },
         y: {
-          grid: { display: false },
-          ticks: { font: { size: 11, family: 'IBM Plex Mono' } }
+          beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.05)' },
+          ticks: { font: { size: 11 } }
         }
       }
     }
@@ -370,7 +385,7 @@ function renderStatusChart() {
 
   const ctx = statusChart.value.getContext('2d')
   statusChartInstance = new Chart(ctx, {
-    type: 'doughnut',
+    type: 'pie',
     data: {
       labels: ['Disetujui', 'Pending', 'Ditolak'],
       datasets: [
@@ -381,12 +396,13 @@ function renderStatusChart() {
             stats.value.klaim_ditolak
           ],
           backgroundColor: [
-            'var(--color-status-approved)',
-            'var(--color-status-pending)',
-            'var(--color-status-rejected)'
+            '#2F7A4F',
+            '#B7791F',
+            '#B54245'
           ],
-          borderColor: 'white',
-          borderWidth: 2
+          borderColor: '#fff',
+          borderWidth: 2,
+          hoverOffset: 8
         }
       ]
     },
