@@ -326,12 +326,21 @@ function renderDiagnosisChart() {
 
   const ctx = diagnosisChart.value.getContext('2d')
   const labels = stats.value.top_diagnosis.map(d => d.kode_icd10)
-  const data = stats.value.top_diagnosis.map(d => d.jumlah)
+  const primerData = stats.value.top_diagnosis.map(d => d.jumlah_primer)
+  const sekunderData = stats.value.top_diagnosis.map(d => d.jumlah_sekunder)
+  const totalData = stats.value.top_diagnosis.map(d => d.jumlah_primer + d.jumlah_sekunder)
 
-  // Gradient fill untuk line chart
-  const gradient = ctx.createLinearGradient(0, 0, 0, 240)
-  gradient.addColorStop(0, 'rgba(28, 61, 90, 0.25)')
-  gradient.addColorStop(1, 'rgba(28, 61, 90, 0.02)')
+  const gradientPrimer = ctx.createLinearGradient(0, 0, 0, 240)
+  gradientPrimer.addColorStop(0, 'rgba(28, 61, 90, 0.20)')
+  gradientPrimer.addColorStop(1, 'rgba(28, 61, 90, 0.01)')
+
+  const gradientSekunder = ctx.createLinearGradient(0, 0, 0, 240)
+  gradientSekunder.addColorStop(0, 'rgba(46, 139, 154, 0.15)')
+  gradientSekunder.addColorStop(1, 'rgba(46, 139, 154, 0.01)')
+
+  const gradientTotal = ctx.createLinearGradient(0, 0, 0, 240)
+  gradientTotal.addColorStop(0, 'rgba(217, 119, 6, 0.12)')
+  gradientTotal.addColorStop(1, 'rgba(217, 119, 6, 0.01)')
 
   diagnosisChartInstance = new Chart(ctx, {
     type: 'line',
@@ -339,16 +348,44 @@ function renderDiagnosisChart() {
       labels: labels,
       datasets: [
         {
-          label: 'Jumlah Kasus',
-          data: data,
+          label: 'Primer',
+          data: primerData,
           borderColor: '#1C3D5A',
-          backgroundColor: gradient,
+          backgroundColor: gradientPrimer,
           borderWidth: 2.5,
           pointBackgroundColor: '#1C3D5A',
           pointBorderColor: '#fff',
           pointBorderWidth: 2,
-          pointRadius: 5,
-          pointHoverRadius: 7,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.3
+        },
+        {
+          label: 'Sekunder',
+          data: sekunderData,
+          borderColor: '#2E8B9A',
+          backgroundColor: gradientSekunder,
+          borderWidth: 2,
+          pointBackgroundColor: '#2E8B9A',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          fill: true,
+          tension: 0.3
+        },
+        {
+          label: 'Total',
+          data: totalData,
+          borderColor: '#D97706',
+          backgroundColor: gradientTotal,
+          borderWidth: 2,
+          pointBackgroundColor: '#D97706',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
           fill: true,
           tension: 0.3
         }
@@ -358,7 +395,10 @@ function renderDiagnosisChart() {
       responsive: true,
       maintainAspectRatio: true,
       plugins: {
-        legend: { display: false }
+        legend: {
+          position: 'top',
+          labels: { font: { size: 11 }, padding: 12 }
+        }
       },
       scales: {
         x: {
