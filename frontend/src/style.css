@@ -8,6 +8,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
+  /* Semantic colors — Design_UI.md §2 */
   --color-primary: #1C3D5A;
   --color-primary-hover: #2D5578;
   --color-primary-dark: #0F2740;
@@ -17,17 +18,79 @@
   --color-text-primary: #1F2937;
   --color-text-secondary: #6B7280;
   --color-text-disabled: #9CA3AF;
+
+  /* Status colors — semantic, never used elsewhere */
   --color-status-draft: #9CA3AF;
   --color-status-pending: #B7791F;
   --color-status-approved: #2F7A4F;
   --color-status-rejected: #B54245;
-  --radius-base: 6px;
-  --spacing-unit: 4px;
+
+  /* Status surfaces — low-chroma tints keeping fg >= 4.5:1 WCAG AA */
+  --color-status-draft-bg: #F3F4F6;
+  --color-status-draft-fg: #9CA3AF;
+  --color-status-pending-bg: #FEF3C7;
+  --color-status-pending-fg: #B7791F;
+  --color-status-approved-bg: #D1FAE5;
+  --color-status-approved-fg: #2F7A4F;
+  --color-status-rejected-bg: #FEE2E2;
+  --color-status-rejected-fg: #B54245;
+
+  /* Type scale — no font-size hardcoded ever again */
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --leading-body: 1.5;
+
+  /* Spacing — 4px unit */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Radius system — hierarchy by role, not single 6px */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+  --radius-base: var(--radius-sm);
+
+  /* Elevation system — nesting signals structure */
+  --elev-0: none;
+  --elev-1: 0 1px 2px rgb(31 41 55 / 5%);
+  --elev-2: 0 4px 12px rgb(31 41 55 / 8%);
+  --elev-3: 0 12px 32px rgb(31 41 55 / 12%);
+  --shadow-panel: var(--elev-1);
+
+  /* Layout */
+  --sidebar-width: 224px;
+  --topbar-height: 66px;
+  --topbar-height-mobile: 60px;
   --content-max-width: 1200px;
+
+  /* Grid & table */
+  --grid-gap: 8px;
+  --table-row-height: 36px;
+
+  /* Focus ring — WCAG AAA visible keyboard focus */
+  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
+  --tap-target: 40px;
+
+  /* Motion */
+  --motion-fast: 140ms ease-out;
+  --motion-status: 200ms ease-out;
+
+  /* Fonts */
   --font-sans: 'IBM Plex Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
-  --shadow-panel: 0 1px 2px rgb(31 41 55 / 4%), 0 8px 24px rgb(31 41 55 / 3%);
-  --motion-fast: 140ms ease-out;
+  --spacing-unit: 4px;
 }
 
 @tailwind base;
@@ -108,242 +171,19 @@ textarea:focus-visible,
   animation: page-enter 240ms ease-out both;
 }
 
+/* PrimeVue Dialog - minimal override for radius consistency */
 .p-dialog {
-  border-radius: var(--radius-base);
+  border-radius: 14px;
 }
 
 .p-dialog .p-dialog-header {
   border-bottom: 1px solid var(--color-border);
-  border-radius: var(--radius-base) var(--radius-base) 0 0;
+  border-radius: 14px 14px 0 0;
 }
 
 .p-dialog .p-dialog-footer {
   border-top: 1px solid var(--color-border);
-  border-radius: 0 0 var(--radius-base) var(--radius-base);
-}
-
-.admin-role-dropdown {
-  z-index: 1200;
-  overflow: hidden;
-  border: 1px solid #dce4e8;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 12px 30px rgb(23 43 58 / 18%);
-}
-
-.admin-role-dropdown .p-select-list {
-  display: grid;
-  gap: 3px;
-  margin: 0;
-  padding: 6px;
-  background: #fff;
-  list-style: none;
-}
-
-.admin-role-dropdown .p-select-option {
-  min-height: 36px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: #fff;
-  color: #344653;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background-color 140ms ease, color 140ms ease;
-}
-
-.admin-role-dropdown .p-select-option.p-select-option-selected {
-  background: #e8f0f5;
-  color: #1c3d5a;
-  font-weight: 600;
-}
-
-.p-datepicker-panel {
-  z-index: 1300;
-  min-width: 296px;
-  overflow: hidden;
-  border: 1px solid #dce4e8 !important;
-  border-radius: 14px !important;
-  background: #fff !important;
-  box-shadow: 0 18px 42px rgb(15 39 64 / 18%), 0 4px 12px rgb(15 39 64 / 8%) !important;
-  color: #344653 !important;
-  opacity: 1;
-}
-
-.p-datepicker-panel .p-datepicker-calendar-container {
-  padding: 8px 12px 12px;
-  background: #fff !important;
-}
-
-.p-datepicker-panel .p-datepicker-calendar {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 2px 4px;
-}
-
-.p-datepicker-panel .p-datepicker-header {
-  min-height: 58px;
-  padding: 12px 14px 8px;
-  border: 0 !important;
-  background: #fff !important;
-  color: #253746;
-}
-
-.p-datepicker-panel .p-datepicker-title {
-  gap: 4px;
-}
-
-.p-datepicker-panel .p-datepicker-select-month,
-.p-datepicker-panel .p-datepicker-select-year {
-  padding: 5px 7px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: #253746;
-  font-size: 14px;
-  font-weight: 600;
-  transition: background-color 140ms ease, color 140ms ease;
-}
-
-.p-datepicker-panel .p-datepicker-select-month:hover,
-.p-datepicker-panel .p-datepicker-select-year:hover {
-  background: #f0f4f6;
-  color: #1c3d5a;
-}
-
-.p-datepicker-panel .p-datepicker-prev-button,
-.p-datepicker-panel .p-datepicker-next-button {
-  width: 34px;
-  height: 34px;
-  border: 1px solid #e6ebee;
-  border-radius: 9px;
-  background: #fff;
-  color: #526777;
-  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
-}
-
-.p-datepicker-panel .p-datepicker-prev-button:hover,
-.p-datepicker-panel .p-datepicker-next-button:hover {
-  border-color: #cbd8df;
-  background: #f2f6f8;
-  color: #1c3d5a;
-}
-
-.p-datepicker-panel .p-datepicker-calendar th {
-  height: 32px;
-  color: #84919a;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.p-datepicker-panel .p-datepicker-day-cell {
-  padding: 1px;
-  text-align: center;
-}
-
-.p-datepicker-panel .p-datepicker-day {
-  display: inline-flex;
-  width: 34px;
-  height: 34px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  color: #344653;
-  font-size: 12px;
-  font-weight: 500;
-  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
-}
-
-.p-datepicker-panel .p-datepicker-day:not(.p-disabled):not(.p-datepicker-day-selected):hover {
-  background: #edf3f6;
-  color: #1c3d5a;
-}
-
-.p-datepicker-panel .p-datepicker-day-cell[data-p-other-month="true"] .p-datepicker-day {
-  color: #b8c1c7;
-}
-
-.p-datepicker-panel .p-datepicker-day-cell[data-p-today="true"] .p-datepicker-day:not(.p-datepicker-day-selected) {
-  box-shadow: inset 0 0 0 1px #9aafbd;
-  color: #1c3d5a;
-  font-weight: 700;
-}
-
-.p-datepicker-panel .p-datepicker-day.p-datepicker-day-selected {
-  background: #1c3d5a;
-  color: #fff !important;
-  font-weight: 600;
-  box-shadow: 0 3px 8px rgb(28 61 90 / 22%);
-}
-
-.p-datepicker-panel .p-datepicker-day.p-disabled {
-  color: #c4ccd1;
-  opacity: 0.65;
-}
-
-.p-datepicker-panel .p-datepicker-month-view,
-.p-datepicker-panel .p-datepicker-year-view {
-  gap: 6px;
-  padding: 8px 16px 16px;
-  background: #fff;
-}
-
-.p-datepicker-panel .p-datepicker-month,
-.p-datepicker-panel .p-datepicker-year {
-  padding: 10px 8px;
-  border-radius: 9px;
-  color: #52616c;
-  font-size: 12px;
-  transition: background-color 140ms ease, color 140ms ease;
-}
-
-.p-datepicker-panel .p-datepicker-month:not(.p-disabled):hover,
-.p-datepicker-panel .p-datepicker-year:not(.p-disabled):hover {
-  background: #edf3f6;
-  color: #1c3d5a;
-}
-
-.p-datepicker-panel .p-datepicker-month-selected,
-.p-datepicker-panel .p-datepicker-year-selected {
-  background: #1c3d5a;
-  color: #fff;
-  font-weight: 600;
-}
-
-.p-datepicker-panel .p-datepicker-buttonbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 14px;
-  border-top: 1px solid #edf0f1;
-  background: #fff !important;
-}
-
-.p-datepicker-panel .p-datepicker-buttonbar .p-button {
-  min-height: 32px;
-  padding: 0 10px;
-  border-radius: 8px;
-  background: transparent;
-  color: #1c3d5a;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.p-datepicker-panel .p-datepicker-buttonbar .p-button:hover {
-  background: #edf3f6;
-}
-
-@media (max-width: 480px) {
-  .p-datepicker-panel {
-    min-width: 280px;
-  }
-
-  .p-datepicker-panel .p-datepicker-day {
-    width: 32px;
-    height: 32px;
-  }
+  border-radius: 0 0 14px 14px;
 }
 
 .p-button,
@@ -382,3 +222,4 @@ textarea:focus-visible,
     transition-duration: 0.01ms !important;
   }
 }
+

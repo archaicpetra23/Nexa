@@ -108,10 +108,10 @@ function changeRows(event) {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #e3e8ea;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 4px 14px rgb(31 41 55 / 5%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--elev-2);
 }
 
 .table-viewport {
@@ -137,7 +137,7 @@ function changeRows(event) {
 
 .table-viewport::-webkit-scrollbar-thumb {
   border: 2px solid #f4f6f7;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: #bdc9d0;
 }
 
@@ -159,7 +159,7 @@ table {
   border-bottom: 1px solid #e4e9eb;
   background: #f7f9fa;
   color: #62717e;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.075em;
   text-transform: uppercase;
@@ -174,7 +174,7 @@ table {
   border-right: 1px solid #edf0f1;
   border-bottom: 1px solid #edf0f1;
   color: #35424c;
-  font-size: 12px;
+  font-size: var(--text-xs);
   vertical-align: middle;
 }
 
@@ -234,18 +234,18 @@ tbody tr:last-child td {
   gap: 8px;
   background: #fff;
   color: #798691;
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-align: center;
 }
 
 .table-state > i {
   color: #91a3af;
-  font-size: 22px;
+  font-size: var(--text-xl);
 }
 
 .table-state strong {
   color: #34424d;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .table-loading {
@@ -270,7 +270,7 @@ tbody tr:last-child td {
 
 .pagination-summary {
   color: #75818a;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .pagination-controls {
@@ -285,17 +285,17 @@ tbody tr:last-child td {
   gap: 6px;
   margin-right: 4px;
   color: #75818a;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .page-size select {
   height: 30px;
   padding: 0 7px;
   border: 1px solid #e1e6e8;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #fff;
   color: #34424d;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .page-button {
@@ -303,17 +303,18 @@ tbody tr:last-child td {
   width: 30px;
   height: 30px;
   place-items: center;
-  border: 1px solid #e1e6e8;
-  border-radius: 7px;
-  background: white;
-  color: #435360;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   cursor: pointer;
+  transition: background-color var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
 }
 
 .page-button:hover:not(:disabled) {
-  border-color: #bdcbd3;
-  background: #f4f8fa;
-  color: #1c3d5a;
+  border-color: var(--color-primary);
+  background: var(--color-bg-base);
+  color: var(--color-primary);
 }
 
 .page-button:disabled {
@@ -324,7 +325,7 @@ tbody tr:last-child td {
 .page-indicator {
   min-width: 44px;
   color: #52616c;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
@@ -336,7 +337,7 @@ tbody tr:last-child td {
   }
 
   .pagination-summary {
-    font-size: 10px;
+    font-size: var(--text-2xs);
   }
 
   .page-size {

@@ -166,14 +166,14 @@
   width: 32px;
   height: 32px;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--color-primary);
   color: white;
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .brand-name {
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 600;
   letter-spacing: -0.8px;
 }
@@ -195,7 +195,7 @@
   align-items: center;
   gap: 8px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .header-caption i,
@@ -212,7 +212,7 @@
   padding: 0 17px;
   border: 1px solid transparent;
   border-radius: var(--radius-base);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-decoration: none;
   transition: background-color var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
@@ -270,9 +270,10 @@
 .section-kicker,
 .visual-kicker {
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1.25px;
+  text-transform: uppercase;
 }
 
 .eyebrow {
@@ -310,7 +311,7 @@
   max-width: 495px;
   margin: 23px 0 28px;
   color: var(--color-text-secondary);
-  font-size: 15px;
+  font-size: var(--text-md);
   line-height: 1.75;
 }
 
@@ -326,7 +327,7 @@
   gap: 11px;
   margin-top: 47px;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .footnote-rule {
@@ -339,7 +340,7 @@
   position: relative;
   padding: 28px 30px 21px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--color-surface);
   box-shadow: 0 18px 50px rgb(31 41 55 / 7%);
   animation: panel-in 500ms 90ms ease-out both;
@@ -355,13 +356,13 @@
 
 .visual-kicker {
   color: var(--color-text-disabled);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .visual-topline h2 {
   margin: 4px 0 0;
   color: var(--color-primary-dark);
-  font-size: 17px;
+  font-size: var(--text-lg);
   font-weight: 600;
 }
 
@@ -378,7 +379,7 @@
 .visual-icon {
   width: 38px;
   height: 38px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .workflow-list {
@@ -392,7 +393,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   transition: background-color var(--motion-fast);
 }
 
@@ -404,13 +405,13 @@
 .workflow-index {
   color: var(--color-text-disabled);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .workflow-icon {
   width: 36px;
   height: 36px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
 }
 
@@ -421,23 +422,23 @@
 
 .workflow-copy strong {
   color: var(--color-text-primary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
 .workflow-copy small {
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .workflow-check {
   color: var(--color-status-approved);
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .workflow-arrow {
   color: var(--color-text-disabled);
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .workflow-connector {
@@ -451,9 +452,10 @@
   align-items: center;
   gap: 6px;
   color: var(--color-primary);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 
 .current-label > span {
@@ -469,7 +471,7 @@
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .visual-footer span:not(.visual-footer-divider) {
@@ -480,7 +482,7 @@
 
 .visual-footer i {
   color: var(--color-primary);
-  font-size: 11px;
+  font-size: var(--text-md);
 }
 
 .visual-footer-divider {
@@ -508,7 +510,7 @@
 .landing-cta h2 {
   margin: 8px 0 0;
   color: var(--color-primary-dark);
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   letter-spacing: -0.6px;
 }
@@ -517,7 +519,7 @@
   max-width: 390px;
   margin: 0 0 2px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.7;
 }
 
@@ -544,7 +546,7 @@
   width: 36px;
   height: 36px;
   margin-bottom: 20px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .capability-number {
@@ -553,13 +555,13 @@
   right: 21px;
   color: var(--color-text-disabled);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .capability-card h3 {
   margin: 0 0 8px;
   color: var(--color-primary-dark);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
 }
 
@@ -567,7 +569,7 @@
   max-width: 250px;
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   line-height: 1.7;
 }
 
@@ -597,7 +599,7 @@
 .landing-cta p {
   margin: 6px 0 0;
   color: #E1E8ED;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .landing-footer {
@@ -606,13 +608,13 @@
   border-top: 1px solid var(--color-border);
   border-bottom: 0;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .footer-brand .brand-mark {
   width: 25px;
   height: 25px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .footer-brand .brand-name {
@@ -723,20 +725,20 @@
   }
 
   .workflow-copy strong {
-    font-size: 11px;
+    font-size: var(--text-2xs);
   }
 
   .workflow-copy small {
-    font-size: 9px;
+    font-size: var(--text-2xs);
   }
 
   .current-label {
-    font-size: 7px;
+    font-size: var(--text-2xs);
   }
 
   .visual-footer {
     gap: 9px;
-    font-size: 9px;
+    font-size: var(--text-2xs);
   }
 
   .capabilities {
@@ -759,11 +761,11 @@
   }
 
   .capability-card h3 {
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .capability-card p {
-    font-size: 10px;
+    font-size: var(--text-2xs);
   }
 
   .capability-number {

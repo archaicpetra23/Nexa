@@ -138,7 +138,7 @@ watch(() => route.path, () => {
   padding: 15px 0 19px;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .is-admin-page .app-footer {

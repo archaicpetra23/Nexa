@@ -154,11 +154,11 @@ async function handleLogout() {
   border-radius: var(--radius-base);
   background: white;
   color: var(--color-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .brand-name {
-  font-size: 18px;
+  font-size: var(--text-xl);
   font-weight: 600;
   letter-spacing: -0.4px;
 }
@@ -170,9 +170,10 @@ async function handleLogout() {
 .sidebar-section-label {
   margin: 27px 10px 10px;
   color: #C0CCD5;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.7px;
+  text-transform: uppercase;
 }
 
 .sidebar-navigation {
@@ -188,7 +189,7 @@ async function handleLogout() {
   padding: 0 11px;
   border-radius: var(--radius-base);
   color: #E1E7EC;
-  font-size: 13px;
+  font-size: var(--text-sm);
   text-decoration: none;
   transition: background-color var(--motion-fast), color var(--motion-fast);
 }
@@ -196,7 +197,7 @@ async function handleLogout() {
 .navigation-link > i {
   width: 17px;
   color: #C0CCD5;
-  font-size: 14px;
+  font-size: var(--text-base);
   text-align: center;
 }
 
@@ -234,7 +235,7 @@ async function handleLogout() {
 
 .security-card > i {
   color: white;
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .security-card > div,
@@ -248,7 +249,7 @@ async function handleLogout() {
 .user-information strong {
   overflow: hidden;
   color: white;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -258,7 +259,7 @@ async function handleLogout() {
 .user-information small {
   overflow: hidden;
   color: #D3DDE4;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -282,7 +283,7 @@ async function handleLogout() {
   border-radius: 50%;
   background: #355672;
   color: white;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 

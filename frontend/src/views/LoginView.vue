@@ -152,22 +152,23 @@ async function handleLogin() {
   width: 34px;
   height: 34px;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #EEF2F5;
   color: var(--color-primary);
 }
 
 .login-card-kicker {
   color: var(--color-text-secondary);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .login-card h2 {
   margin: 0;
   color: var(--color-primary-dark);
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   letter-spacing: -0.5px;
 }
@@ -175,7 +176,7 @@ async function handleLogin() {
 .login-intro {
   margin: 6px 0 23px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .login-form {
@@ -187,7 +188,7 @@ async function handleLogin() {
   display: block;
   margin-bottom: 6px;
   color: var(--color-text-primary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
 }
 
@@ -214,7 +215,7 @@ async function handleLogin() {
 
 .input-icon {
   color: var(--color-text-disabled);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .input-wrap input {
@@ -225,7 +226,7 @@ async function handleLogin() {
   outline: 0;
   background: transparent;
   color: var(--color-text-primary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .input-wrap input::placeholder {
@@ -243,7 +244,7 @@ async function handleLogin() {
   flex: 0 0 auto;
   place-items: center;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -257,7 +258,7 @@ async function handleLogin() {
 .field-error {
   margin: 5px 0 0;
   color: var(--color-status-rejected);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .login-error {
@@ -269,7 +270,7 @@ async function handleLogin() {
   border-radius: var(--radius-base);
   background: #FCF4F4;
   color: #8F3033;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .login-error i {
@@ -287,7 +288,7 @@ async function handleLogin() {
   border-radius: var(--radius-base);
   background: var(--color-primary);
   color: white;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   transition: background-color var(--motion-fast);
@@ -317,9 +318,10 @@ async function handleLogin() {
 
 .login-divider small {
   color: var(--color-text-disabled);
-  font-size: 8px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
 .login-security {
@@ -328,7 +330,7 @@ async function handleLogin() {
   gap: 7px;
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .login-security i {

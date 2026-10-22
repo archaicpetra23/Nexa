@@ -96,7 +96,7 @@ const userInitials = computed(() => {
 
 .topbar-breadcrumb {
   gap: 10px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .breadcrumb-root {
@@ -105,7 +105,7 @@ const userInitials = computed(() => {
 
 .topbar-breadcrumb > i {
   color: var(--color-text-disabled);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .breadcrumb-current {
@@ -125,13 +125,13 @@ const userInitials = computed(() => {
 
 .topbar-user-copy strong {
   color: var(--color-text-primary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 
 .topbar-user-copy small {
   color: var(--color-text-secondary);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .topbar-avatar {
@@ -143,7 +143,7 @@ const userInitials = computed(() => {
   border-radius: 50%;
   background: #EEF2F5;
   color: var(--color-primary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 

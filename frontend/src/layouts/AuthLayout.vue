@@ -61,10 +61,10 @@
   width: 32px;
   height: 32px;
   place-items: center;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--color-primary);
   color: white;
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .auth-main {
@@ -86,9 +86,10 @@
 
 .auth-aside-kicker {
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1.2px;
+  text-transform: uppercase;
 }
 
 .auth-aside h1 {
@@ -128,7 +129,7 @@
   height: 38px;
   place-items: center;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
 }
 
@@ -139,13 +140,13 @@
 
 .auth-assurance strong {
   color: var(--color-text-primary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
 .auth-assurance small {
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .auth-form-wrap {
@@ -158,7 +159,7 @@
 .auth-help {
   margin: 16px 0 0;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   text-align: center;
 }
 
@@ -173,7 +174,7 @@
   padding: 16px 0 20px;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .auth-footer > span:last-child {
