@@ -4,6 +4,70 @@
 
 ---
 
+## [2026-10-22 13:30 WIB] — Unit Test Suite (Backend + Frontend) dan Perbaikan Duplikasi Data
+
+- **Agent:** Hermes (SSERAPHIM)
+- **Tipe:** Test & Quality + Fix Bug
+- **Status:** Selesai
+- **Modul:** Backend (unit test), Frontend (Vitest + konsolidasi helper), Dokumentasi
+- **File terdampak:**
+  - `backend/pkg/jwt_test.go`, `backend/pkg/bcrypt_test.go` (baru)
+  - `backend/internal/delivery/http/date_helper_test.go` (baru)
+  - `backend/internal/usecase/klaim_status_test.go`, `klaim_usecase_test.go`, `pasien_usecase_test.go`, `rekam_medis_usecase_test.go` (baru)
+  - `backend/internal/testutil/mocks.go`, `mock_pasien_repository.go`, `mock_klaim_repository.go`, `mock_rekam_medis_repository.go` (baru)
+  - `backend/internal/usecase/pasien_usecase.go`, `klaim_usecase.go` (fix duplikasi data)
+  - `backend/go.mod` (tambah `github.com/stretchr/testify v1.11.1`)
+  - `frontend/vitest.config.js` (baru), `frontend/package.json` (script `test`, devDeps vitest/@vue/test-utils/jsdom)
+  - `frontend/src/utils/pasienValidation.js`, `klaimValidation.js`, `format.js` (baru)
+  - `frontend/src/utils/__tests__/pasienValidation.test.js`, `klaimValidation.test.js`, `format.test.js` (baru)
+  - `frontend/src/api/__tests__/client.test.js` (baru)
+  - `frontend/src/views/PasienView.vue`, `KlaimView.vue`, `DashboardView.vue`, `RekamMedisView.vue`, `MasterICDView.vue`, `AdminView.vue` (pakai helper bersama)
+  - `README.md` (section "Menjalankan Unit Test")
+- **Deskripsi:**
+
+  Sebelumnya repo tidak punya satu pun test. Sekarang ada suite backend dan frontend.
+
+  **Before → after:**
+  - File `*_test.go`: `0 → 7`
+  - `go test ./...`: `[no test files]` untuk 14 package → `ok` untuk 3 package dengan coverage, sisanya `[no test files]` (belum ada test-nya)
+  - Coverage: `internal/usecase` 81.5%, `pkg` 89.5%, `internal/delivery/http` 0.5%
+  - Test function Go: 0 → 55
+  - Dependency Vitest: tidak ada → `vitest ^2.1.9`, `@vue/test-utils ^2.5.1`, `jsdom ^25.0.1`
+  - Script frontend: `dev`/`build`/`preview` → ditambah `test` dan `test:watch`
+  - File test frontend: 0 → 4 (49 assertion)
+
+  **Isi suite backend:**
+  - Fungsi murni tanpa I/O: `GenerateToken`/`ValidateToken` (round-trip, secret salah, token kedaluwarsa, signature & payload diutak-atik), `HashPassword`/`CheckPasswordHash` (prefix `$2a$12$`, panjang 60 byte, salt acak), `parseDate` (layout salah, tanggal tidak valid).
+  - `validateKlaimStatus` table-driven: 12 kasus termasuk alasan kosong dan status ngawur.
+  - Usecase dengan repository di-mock: 3 stub di `internal/testutil/` memakai function-field + call counter (bukan testify/mock), jadi tiap test membuktikan dependency benar-benar dipanggil atau benar-benar tidak. Cakupan: duplikat NIK/BPJS/Rekam, alasan wajib, matriks akses `canAccessRekam` untuk 7 role + role tak dikenal (IDOR), penempatan `IDRekam` oleh usecase, clamping pagination.
+  - Semua assertion error memakai `assert.ErrorIs` terhadap sentinel asli, bukan string pesan.
+
+  **Isi suite frontend:**
+  - `pasienValidation.test.js` — 15 test, aturan diekstrak 1:1 dari `validate()` inline `PasienView.vue` (regex, pesan error, dan aturan `alamat` wajib sama persis).
+  - `klaimValidation.test.js` — 15 test, state machine transisi status (`draft`/`pending` → bebas, `disetujui`/`ditolak` terminal) + aturan alasan wajib. Ini logic baru yang sebelumnya tidak ada di frontend; ditulis mengikuti `validateKlaimStatus` backend supaya konsisten.
+  - `format.test.js` — 15 test, `formatRupiah` (pemisah ribuan titik, pembulatan, nilai kosong → `Rp 0`, minus di depan), `formatTanggal` (dinormalisasi UTC supaya tidak bergantung timezone runner), `formatTanggalWaktu`.
+  - `client.test.js` — 4 test konfigurasi API client (`baseURL`, `withCredentials`, `Content-Type`).
+
+  **Konsolidasi helper frontend:** `formatRupiah` sebelumnya disalin inline di 4 view (`KlaimView.vue:370`, `DashboardView.vue:442`, `RekamMedisView.vue:521`, `MasterICDView.vue:545`) dan `formatDateTime`/`formatNumber`/`formatDate` di `AdminView.vue`. Semua diganti import dari `src/utils/format.js` supaya bisa diuji dan tidak ada salinan yang tertinggal.
+
+- **Bug yang ditemukan test (HIGH) — duplikasi data bisa lolos:**
+  `CreatePasien` dan `CreateKlaim` mengecek duplikat hanya lewat `if err == nil && existing != nil`. Artinya kalau lookup gagal dengan error selain "record not found" (mis. koneksi putus, query error), `err` diabaikan, `existing` dianggap kosong, dan data **duplikat tetap di-insert**. Ini membuka celah pada unique constraint NIK/No BPJS/`id_rekam`.
+  Fix: tambah `if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) { return err }` di kedua usecase (3 titik: NIK, No BPJS, rekam). Test `TestCreatePasienPropagatesRepositoryError` dan `TestCreateKlaimPropagatesRepositoryError` mengunci perilaku ini.
+
+- **Verifikasi:**
+  - `cd backend && go test ./... -cover` → 3 baris `ok`, tidak ada `FAIL`; coverage usecase 81.5%, pkg 89.5%
+  - `cd frontend && npm run test` → `Test Files 4 passed (4)`, `Tests 49 passed (49)`
+  - `npx vite build --outDir /tmp/nexa-build-check` → sukses, 1.791.335 bytes vs baseline lama 1.789.446 bytes (+0,1%)
+  - `curl http://localhost:8080/health` → 200 setelah `docker compose restart backend` (fix ter-load)
+  - Smoke endpoint dengan cookie sesi: `/dashboard/stats`, `/pasien`, `/klaim`, `/rekam-medis`, `/master/roles` semua 200; tanpa sesi → 401 (RBAC masih bekerja)
+
+- **Error/Kendala:**
+  - Browser lokal tidak tersedia (Chromium belum terpasang), jadi verifikasi UI dilakukan lewat HTTP + build, bukan lewat DOM browser. Verifikasi visual langsung belum dilakukan.
+  - `formatRupiah` di helper baru awalnya memakai spasi biasa pada jalur fallback, berbeda dari output `Intl` yang memakai non-breaking space (U+00A0) — sudah disamakan.
+  - Package `internal/repository` belum punya test (butuh DB) — sengaja ditinggal, bukan difix.
+
+---
+
 ## [2026-10-18 15:50 WIB] — Fix Chart Dashboard, Seed Error, dan Rekonfigurasi Seeder
 
 - **Agent:** Hermes (SSERAPHIM)

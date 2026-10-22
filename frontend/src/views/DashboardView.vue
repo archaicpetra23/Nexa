@@ -227,6 +227,7 @@ import ModernTable from '../components/ModernTable.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import { useAuthStore } from '../stores/auth'
 import client from '../api/client'
+import { formatRupiah } from '../utils/format.js'
 
 Chart.register(...registerables)
 
@@ -326,68 +327,19 @@ function renderDiagnosisChart() {
 
   const ctx = diagnosisChart.value.getContext('2d')
   const labels = stats.value.top_diagnosis.map(d => d.kode_icd10)
-  const primerData = stats.value.top_diagnosis.map(d => d.jumlah_primer)
-  const sekunderData = stats.value.top_diagnosis.map(d => d.jumlah_sekunder)
-  const totalData = stats.value.top_diagnosis.map(d => d.jumlah_primer + d.jumlah_sekunder)
-
-  const gradientPrimer = ctx.createLinearGradient(0, 0, 0, 240)
-  gradientPrimer.addColorStop(0, 'rgba(28, 61, 90, 0.20)')
-  gradientPrimer.addColorStop(1, 'rgba(28, 61, 90, 0.01)')
-
-  const gradientSekunder = ctx.createLinearGradient(0, 0, 0, 240)
-  gradientSekunder.addColorStop(0, 'rgba(46, 139, 154, 0.15)')
-  gradientSekunder.addColorStop(1, 'rgba(46, 139, 154, 0.01)')
-
-  const gradientTotal = ctx.createLinearGradient(0, 0, 0, 240)
-  gradientTotal.addColorStop(0, 'rgba(217, 119, 6, 0.12)')
-  gradientTotal.addColorStop(1, 'rgba(217, 119, 6, 0.01)')
+  const totalData = stats.value.top_diagnosis.map(d => d.jumlah)
 
   diagnosisChartInstance = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels: labels,
       datasets: [
         {
-          label: 'Primer',
-          data: primerData,
-          borderColor: '#1C3D5A',
-          backgroundColor: gradientPrimer,
-          borderWidth: 2.5,
-          pointBackgroundColor: '#1C3D5A',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: true,
-          tension: 0.3
-        },
-        {
-          label: 'Sekunder',
-          data: sekunderData,
-          borderColor: '#2E8B9A',
-          backgroundColor: gradientSekunder,
-          borderWidth: 2,
-          pointBackgroundColor: '#2E8B9A',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          fill: true,
-          tension: 0.3
-        },
-        {
-          label: 'Total',
+          label: 'Jumlah Kasus',
           data: totalData,
-          borderColor: '#D97706',
-          backgroundColor: gradientTotal,
-          borderWidth: 2,
-          pointBackgroundColor: '#D97706',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          fill: true,
-          tension: 0.3
+          backgroundColor: '#1C3D5A',
+          borderRadius: 4,
+          borderSkipped: false
         }
       ]
     },
@@ -402,8 +354,7 @@ function renderDiagnosisChart() {
       },
       scales: {
         x: {
-          beginAtZero: true,
-          grid: { drawBorder: false, color: 'rgba(0, 0, 0, 0.05)' },
+          grid: { display: false },
           ticks: { font: { size: 11, family: 'IBM Plex Mono' } }
         },
         y: {
@@ -440,19 +391,31 @@ function renderStatusChart() {
             '#B7791F',
             '#B54245'
           ],
-          borderColor: '#fff',
-          borderWidth: 2,
-          hoverOffset: 8
+          borderColor: '#FFFFFF',
+          borderWidth: 3,
+          hoverOffset: 12,
+          spacing: 2
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: true,
+      layout: {
+        padding: 20
+      },
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { font: { size: 11 }, padding: 16 }
+          align: 'center',
+          labels: {
+            font: { size: 12, family: 'IBM Plex Sans' },
+            padding: 20,
+            usePointStyle: true,
+            pointStyle: 'rectRounded',
+            boxWidth: 10,
+            boxHeight: 10
+          }
         }
       }
     }
@@ -475,10 +438,6 @@ async function fetchRecentClaims() {
 
 function formatNumber(value) {
   return new Intl.NumberFormat('id-ID').format(value)
-}
-
-function formatRupiah(value) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
 }
 
 onMounted(() => {

@@ -65,7 +65,7 @@
           <td class="font-mono">{{ item.id_rekam }}</td>
           <td><span class="code-badge">{{ item.kode_cbgs }}</span></td>
           <td class="font-mono amount-cell">{{ formatRupiah(item.nominal_klaim) }}</td>
-          <td>{{ formatDate(item.tanggal_klaim) }}</td>
+          <td>{{ formatTanggalSingkat(item.tanggal_klaim) }}</td>
           <td><StatusBadge :status="item.status_klaim" type="claim" /></td>
           <td>
             <div class="flex gap-1">
@@ -111,7 +111,8 @@
           </div>
           <div class="form-field">
             <label for="new-status">Status Baru <span class="required">*</span></label>
-            <Select id="new-status" v-model="statusForm.status_klaim" :options="statusOptions" optionLabel="label" optionValue="value" class="w-full" />
+            <Select id="new-status" v-model="statusForm.status_klaim" :options="editableStatusOptions" optionLabel="label" optionValue="value" :optionDisabled="canPickStatus" class="w-full" />
+            <small v-if="transitionHint(statusForm.status_klaim)" class="field-hint">{{ transitionHint(statusForm.status_klaim) }}</small>
           </div>
           <div v-if="showReasonField" class="form-field full-width">
             <label for="alasan">Alasan <span class="required">*</span></label>
@@ -153,6 +154,8 @@ import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Toast from 'primevue/toast'
+import { ALLOWED_TRANSITIONS, canTransition, transitionError } from '../utils/klaimValidation.js'
+import { formatRupiah, formatTanggalSingkat } from '../utils/format.js'
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -177,6 +180,20 @@ const statusOptions = [
   { label: 'Disetujui', value: 'disetujui' },
   { label: 'Ditolak', value: 'ditolak' }
 ]
+
+// Opsi status yang ditampilkan di modal ubah status — status terminal
+// (disetujui/ditolak) tidak bisa ditinggalkan, jadi tidak ditawarkan.
+const editableStatusOptions = computed(() => {
+  const current = editingKlaim.value?.status_klaim
+  const allowed = current ? ALLOWED_TRANSITIONS[current] || [] : []
+  const labels = {
+    draft: 'Draft',
+    pending: 'Pending',
+    disetujui: 'Disetujui',
+    ditolak: 'Ditolak'
+  }
+  return allowed.map((value) => ({ label: labels[value] || value, value }))
+})
 
 const cbgsOptions = ref([])
 
@@ -318,6 +335,22 @@ function validateStatusForm() {
   return Object.keys(statusErrors.value).length === 0
 }
 
+// canPickStatus dipakai template untuk menonaktifkan opsi yang state machine
+// tolak (mis. mengubah klaim berstatus disetujui menjadi draft).
+function canPickStatus(next) {
+  const current = editingKlaim.value?.status_klaim
+  if (!current) return true
+  return canTransition(current, next, statusForm.value.alasan_pending_tolak)
+}
+
+// transitionHint dipakai template untuk menjelaskan kenapa sebuah status tidak
+// bisa dipilih.
+function transitionHint(next) {
+  const current = editingKlaim.value?.status_klaim
+  if (!current) return ''
+  return transitionError(current, next, statusForm.value.alasan_pending_tolak) || ''
+}
+
 async function saveStatus() {
   if (!validateStatusForm()) return
   saving.value = true
@@ -359,16 +392,6 @@ async function executeDelete() {
     toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Gagal menghapus', life: 3000 })
   }
   showDeleteConfirm.value = false
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' })
-}
-
-function formatRupiah(value) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
 }
 
 fetchKlaim()

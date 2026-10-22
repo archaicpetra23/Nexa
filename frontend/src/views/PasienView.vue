@@ -45,7 +45,7 @@
         <template #row="{ item }">
           <td class="font-mono">{{ item.nik }}</td>
           <td class="user-name-cell">{{ item.nama }}</td>
-          <td>{{ formatDate(item.tanggal_lahir) }}</td>
+          <td>{{ formatTanggalSingkat(item.tanggal_lahir) }}</td>
           <td>{{ item.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
           <td class="font-mono">{{ item.no_bpjs || '—' }}</td>
           <td class="address-cell">{{ item.alamat }}</td>
@@ -129,7 +129,9 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
+import { validatePasienForm } from '../utils/pasienValidation'
 import Toast from 'primevue/toast'
+import { formatTanggalSingkat } from '../utils/format.js'
 
 const toast = useToast()
 
@@ -225,20 +227,9 @@ function openModal(item) {
 }
 
 function validate() {
-  errors.value = {}
-  if (!form.value.nik) {
-    errors.value.nik = 'NIK wajib diisi'
-  } else if (!/^\d{16}$/.test(form.value.nik)) {
-    errors.value.nik = 'NIK harus 16 digit angka'
-  }
-  if (!form.value.nama) errors.value.nama = 'Nama wajib diisi'
-  if (!form.value.tanggal_lahir) errors.value.tanggal_lahir = 'Tanggal lahir wajib diisi'
-  if (!form.value.jenis_kelamin) errors.value.jenis_kelamin = 'Jenis kelamin wajib dipilih'
-  if (!form.value.alamat) errors.value.alamat = 'Alamat wajib diisi'
-  if (form.value.no_bpjs && !/^\d{13}$/.test(form.value.no_bpjs)) {
-    errors.value.no_bpjs = 'No. BPJS harus 13 digit angka'
-  }
-  return Object.keys(errors.value).length === 0
+  const result = validatePasienForm(form.value)
+  errors.value = result.errors
+  return result.valid
 }
 
 async function save() {
@@ -284,12 +275,6 @@ async function executeDelete() {
     toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Gagal menghapus', life: 3000 })
   }
   showDeleteConfirm.value = false
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
 function formatDateForAPI(date) {

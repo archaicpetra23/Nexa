@@ -45,7 +45,7 @@
         <template #row="{ item }">
           <td class="font-mono">{{ item.id_rekam }}</td>
           <td class="font-mono">{{ item.id_pasien }}</td>
-          <td>{{ formatDate(item.tanggal_kunjungan) }}</td>
+          <td>{{ formatTanggalSingkat(item.tanggal_kunjungan) }}</td>
           <td>{{ item.jenis_perawatan === 'rawat_jalan' ? 'Rawat Jalan' : 'Rawat Inap' }}</td>
           <td class="complaint-cell">{{ item.keluhan }}</td>
           <td>{{ item.id_dokter }}</td>
@@ -245,6 +245,7 @@ import DatePicker from 'primevue/datepicker'
 import Select from 'primevue/select'
 import AutoComplete from 'primevue/autocomplete'
 import Toast from 'primevue/toast'
+import { formatRupiah, formatTanggalSingkat } from '../utils/format.js'
 
 const toast = useToast()
 
@@ -504,22 +505,12 @@ async function executeDelete() {
   showDeleteConfirm.value = false
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' })
-}
-
 function formatDateForAPI(date) {
   if (!date) return ''
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
-}
-
-function formatRupiah(value) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
 }
 
 fetchRekam()

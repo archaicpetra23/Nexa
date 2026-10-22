@@ -116,7 +116,36 @@ Harus membalas:
 
 > Kalau ada service yang **`Exit`** atau **`Restarting`**, cek log-nya: `docker compose logs backend` (atau ganti `backend` dengan nama service lain).
 
-### 5. Akses Aplikasi & Login
+### 5. Menjalankan Unit Test
+
+Unit test dijalankan terpisah dari proses start aplikasi. Dua suite: backend (Go) dan frontend (Vitest).
+
+```bash
+# Backend — dari dalam container (tidak perlu install Go di mesin lokal)
+docker compose exec backend go test ./... -cover
+
+# Backend — alternatif lokal, dengan Go terpasang
+cd backend && go test ./... -cover
+
+# Frontend
+cd frontend && npm run test
+```
+
+**Yang diharapkan saat suite lulus:**
+
+- Backend mencetak satu baris `ok` per package beserta persentase coverage, contoh:
+
+  ```
+  ok  	nexa/backend/internal/delivery/http	0.033s	coverage: 0.5% of statements
+  ok  	nexa/backend/internal/usecase	        0.015s	coverage: 81.5% of statements
+  ok  	nexa/backend/pkg	                    8.068s	coverage: 89.5% of statements
+  ```
+
+- Frontend mencetak ringkasan `Test Files  N passed (N)` dan `Tests  N passed (N)`.
+
+> Package yang belum punya test tampil sebagai `?   nexa/backend/...  [no test files]` — itu normal, bukan kegagalan. Kegagalan ditandai baris `FAIL` dan exit code bukan nol.
+
+### 6. Akses Aplikasi & Login
 
 Buka browser:
 
@@ -140,7 +169,7 @@ Saat pertama kali dijalankan, backend **otomatis membuat tabel database (auto-mi
 
 > Gunakan akun `admin` untuk akses penuh, dan akun lain untuk mencoba pembatasan hak akses (RBAC) per role.
 
-### 6. Stop & Cleanup
+### 7. Stop & Cleanup
 
 ```bash
 # Stop semua service (data database TETAP tersimpan)
@@ -319,6 +348,17 @@ pkill -f "vite"
 | [`docs/Design_UI.md`](docs/Design_UI.md)       | Panduan desain antarmuka dan komponen UI                                            |
 | [`docs/Logging.md`](docs/Logging.md)           | Konvensi dev log — aturan pencatatan pekerjaan ke `DEVLOG.md`                       |
 | [`docs/DevLog.md`](docs/DevLog.md)             | Dev log kronologis — riwayat fitur, fix, refactor, dan error yang masih terbuka     |
+
+### Menjalankan Test (ringkas)
+
+Perintah lengkapnya ada di [Quick Start bagian 5](#5-menjalankan-unit-test). Ringkasnya:
+
+```bash
+docker compose exec backend go test ./... -cover   # backend
+cd frontend && npm run test                        # frontend
+```
+
+Suite yang ada: test murni untuk fungsi tanpa I/O (`pkg`, helper tanggal, validasi status klaim), test usecase dengan repository di-mock (aturan bisnis, cek kepemilikan/IDOR, clamping pagination), dan test frontend untuk validasi form pasien, transisi status klaim, formatter angka/tanggal, serta konfigurasi API client.
 
 ## Masalah yang Diselesaikan
 

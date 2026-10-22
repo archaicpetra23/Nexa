@@ -247,6 +247,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import Toast from 'primevue/toast'
+import { formatRupiah } from '../utils/format.js'
 
 const authStore = useAuthStore()
 const toast = useToast()
@@ -540,10 +541,6 @@ async function executeDelete() {
     toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.message || 'Gagal menghapus', life: 3000 })
   }
   showDeleteConfirm.value = false
-}
-
-function formatRupiah(value) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
 }
 
 // Initial load

@@ -213,9 +213,9 @@
             <td class="user-name-cell">{{ item.pasien_nama }}</td>
             <td class="font-mono">{{ item.kode_cbgs }}</td>
             <td><StatusBadge :status="item.status_klaim" type="claim" /></td>
-            <td class="font-mono amount-cell">{{ formatNumber(item.nominal_klaim) }}</td>
-            <td class="font-mono">{{ formatDate(item.tanggal_klaim) }}</td>
-            <td class="font-mono">{{ formatDate(item.updated_at) }}</td>
+            <td class="font-mono amount-cell">{{ formatRupiah(item.nominal_klaim) }}</td>
+            <td class="font-mono">{{ formatTanggal(item.tanggal_klaim) }}</td>
+            <td class="font-mono">{{ formatTanggal(item.updated_at) }}</td>
             <td>{{ item.petugas_nama }}</td>
             <td>
                 <div class="flex gap-1">
@@ -311,7 +311,7 @@
               <th scope="col">Data ID</th>
             </template>
             <template #row="{ item }">
-              <td class="font-mono">{{ formatDateTime(item.waktu) }}</td>
+              <td class="font-mono">{{ formatTanggalWaktu(item.waktu) }}</td>
               <td class="font-mono user-name-cell">{{ item.username || '-' }}</td>
               <td><StatusBadge :status="item.aktivitas" type="activity" /></td>
               <td>{{ item.tabel_terdampak }}</td>
@@ -467,6 +467,7 @@ import ModernTable from '../components/ModernTable.vue'
 import UserFormModal from '../components/UserFormModal.vue'
 import UnitFormModal from '../components/UnitFormModal.vue'
 import DeleteConfirm from '../components/DeleteConfirm.vue'
+import { formatRupiah, formatTanggal, formatTanggalSingkat, formatTanggalWaktu } from '../utils/format.js'
 
 const authStore = useAuthStore()
 const adminStore = useAdminStore()
@@ -928,21 +929,9 @@ async function executeDelete() {
 }
 
 // ============ Helpers ============
-function formatNumber(num) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num)
-}
 
-function formatDate(dateStr) {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
 
-function formatDateTime(dateStr) {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
+
 
 function formatDateForApi(date) {
   if (!date) return ''
