@@ -19,10 +19,9 @@ func NewDashboardHandler(db *gorm.DB) *DashboardHandler {
 
 // topDiagnosisRow is one entry of the dashboard "top_diagnosis" list.
 type topDiagnosisRow struct {
-	KodeICD10      string `json:"kode_icd10"`
-	NamaDiagnosis  string `json:"nama_diagnosis"`
-	JumlahPrimer   int64  `json:"jumlah_primer"`
-	JumlahSekunder int64  `json:"jumlah_sekunder"`
+	KodeICD10     string `json:"kode_icd10"`
+	NamaDiagnosis string `json:"nama_diagnosis"`
+	Jumlah        int64  `json:"jumlah"`
 }
 
 // dashboardStats is the /dashboard/stats payload.
@@ -105,12 +104,12 @@ func (h *DashboardHandler) GetStats(c *gin.Context) {
 		return
 	}
 
-	// Top 10 diagnosis by frequency in rekam_diagnosis, split by primer/sekunder
+	// Top 10 diagnosis by frequency in rekam_diagnosis
 	if err := h.db.Model(&model.RekamDiagnosis{}).
-		Select("d.kode_icd10, d.nama_diagnosis, SUM(CASE WHEN rekam_diagnosis.jenis = 'primer' THEN 1 ELSE 0 END) as jumlah_primer, SUM(CASE WHEN rekam_diagnosis.jenis = 'sekunder' THEN 1 ELSE 0 END) as jumlah_sekunder").
+		Select("d.kode_icd10, d.nama_diagnosis, COUNT(*) as jumlah").
 		Joins("JOIN diagnosis d ON d.kode_icd10 = rekam_diagnosis.kode_icd10").
 		Group("d.kode_icd10, d.nama_diagnosis").
-		Order("SUM(CASE WHEN rekam_diagnosis.jenis = 'primer' THEN 1 ELSE 0 END) DESC").
+		Order("jumlah DESC").
 		Limit(10).
 		Scan(&stats.TopDiagnosis).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
