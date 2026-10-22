@@ -5,6 +5,8 @@ import (
 	"nexa/backend/internal/model"
 	"nexa/backend/internal/repository"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -32,6 +34,12 @@ func NewKlaimUsecase(repo repository.KlaimRepository) KlaimUsecase {
 
 func (uc *klaimUsecase) CreateKlaim(klaim *model.Klaim, userID uint) error {
 	existing, err := uc.repo.FindByRekamID(klaim.IDRekam)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		// Any failure other than "no row" must stop the insert. Treating it as
+		// "no existing claim" would let a duplicate slip past the uniqueness
+		// check whenever the lookup itself fails.
+		return err
+	}
 	if err == nil && existing != nil {
 		return ErrKlaimDuplicateRekam
 	}

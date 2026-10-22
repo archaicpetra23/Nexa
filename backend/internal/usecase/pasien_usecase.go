@@ -5,6 +5,8 @@ import (
 	"nexa/backend/internal/model"
 	"nexa/backend/internal/repository"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -32,12 +34,21 @@ func NewPasienUsecase(repo repository.PasienRepository) PasienUsecase {
 
 func (uc *pasienUsecase) CreatePasien(pasien *model.Pasien) error {
 	existing, err := uc.repo.FindByNIK(pasien.NIK)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		// Any failure other than "no row" must stop the insert. Treating it as
+		// "no existing patient" would let a duplicate NIK slip past the
+		// uniqueness check whenever the lookup itself fails.
+		return err
+	}
 	if err == nil && existing != nil {
 		return ErrPasienDuplicateNIK
 	}
 
 	if pasien.NoBPJS != nil && *pasien.NoBPJS != "" {
 		existingBPJS, err := uc.repo.FindByNoBPJS(*pasien.NoBPJS)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
 		if err == nil && existingBPJS != nil {
 			return ErrPasienDuplicateBPJS
 		}
