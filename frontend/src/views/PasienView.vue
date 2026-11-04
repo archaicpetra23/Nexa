@@ -305,15 +305,16 @@ fetchPasien()
 .page-kicker {
   display: block;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1.25px;
+  text-transform: uppercase;
 }
 
 .page-header h1 {
   margin: 8px 0 5px;
   color: var(--color-primary-dark);
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   letter-spacing: -0.7px;
 }
@@ -321,7 +322,7 @@ fetchPasien()
 .page-header p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .filter-bar {
@@ -330,7 +331,7 @@ fetchPasien()
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: white;
 }
 
@@ -360,7 +361,7 @@ fetchPasien()
   border: 0;
   background: transparent;
   box-shadow: none;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .primary-button {
@@ -375,7 +376,7 @@ fetchPasien()
   color: white;
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   transition: background-color 140ms ease;
@@ -401,7 +402,7 @@ fetchPasien()
   padding-bottom: 10px;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-primary);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 600;
 }
 
@@ -422,7 +423,7 @@ fetchPasien()
 
 .form-field label {
   color: var(--color-text-primary);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
 }
 
@@ -432,7 +433,7 @@ fetchPasien()
 
 .field-error {
   color: #B54245;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 @media (max-width: 640px) {

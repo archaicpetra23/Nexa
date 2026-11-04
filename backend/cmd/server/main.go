@@ -18,8 +18,8 @@ func main() {
 	}
 
 	r := gin.Default()
-	routes.Setup(r, db, cfg.JWTSecret)
-
+	routes.Setup(r, db, cfg)
+	
 	log.Printf("Server running on %s", cfg.Port)
 	if err := r.Run(cfg.Port); err != nil {
 		log.Fatal("Failed to start server:", err)

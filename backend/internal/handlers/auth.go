@@ -10,8 +10,9 @@ import (
 )
 
 type AuthHandler struct {
-	DB        *gorm.DB
-	JWTSecret string
+	DB           *gorm.DB
+	JWTSecret    string
+	CookieSecure bool
 }
 
 type LoginRequest struct {
@@ -53,8 +54,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("jwt", token, 3600*8, "/", "", false, true)
+	if h.CookieSecure {
+		c.SetSameSite(http.SameSiteNoneMode)
+	} else {
+		c.SetSameSite(http.SameSiteLaxMode)
+	}
+	c.SetCookie("jwt", token, 3600*8, "/", "", h.CookieSecure, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
@@ -80,7 +85,6 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		return
 	}
 
-	// BUG-001 FIX: guard nil Role pointer with fallback
 	roleName := ""
 	if user.Role != nil {
 		roleName = user.Role.NamaRole
@@ -122,8 +126,12 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("jwt", token, 3600*8, "/", "", false, true)
+	if h.CookieSecure {
+		c.SetSameSite(http.SameSiteNoneMode)
+	} else {
+		c.SetSameSite(http.SameSiteLaxMode)
+	}
+	c.SetCookie("jwt", token, 3600*8, "/", "", h.CookieSecure, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
@@ -138,6 +146,6 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("jwt", "", -1, "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Logout successful"})
+	c.SetCookie("jwt", "", -1, "/", "", h.CookieSecure, true)
+	c.JSON(http.StatusOK, gin.H{"success": false, "message": "Logout successful"})
 }

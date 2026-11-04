@@ -3,8 +3,9 @@ package models
 import "time"
 
 type Role struct {
-	IDRole   uint   `gorm:"primaryKey;column:id_role" json:"id_role"`
-	NamaRole string `gorm:"unique;not null;column:nama_role" json:"nama_role"`
+	IDRole    uint   `gorm:"primaryKey;column:id_role" json:"id_role"`
+	NamaRole  string `gorm:"unique;not null;column:nama_role" json:"nama_role"`
+	Deskripsi string `gorm:"default:'';not null;column:deskripsi" json:"deskripsi"`
 }
 
 func (Role) TableName() string {

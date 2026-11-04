@@ -1,12 +1,42 @@
 # Nexa — Sistem Informasi Casemix Terintegrasi
 
-**Nexa** adalah aplikasi web rekam medis dan penagihan terintegrasi yang dirancakan untuk mempercepat siklus operasional klaim BPJS Kesehatan di Rumah Sakit Umum Daerah (RSUD). Sistem ini menjembatani _data silos_ antara loket pendaftaran, dokter DPJP, perawat bangsal, koder Casemix, dan bagian keuangan.
+**Nexa** adalah aplikasi web rekam medis dan penagihan terintegrasi yang dirancang untuk mempercepat siklus operasional klaim BPJS Kesehatan di Rumah Sakit Umum Daerah (RSUD). Sistem ini menjembatani _data silos_ antara loket pendaftaran, dokter DPJP, perawat bangsal, koder Casemix, dan bagian keuangan.
 
 ## Tech Stack
 
 - **Backend:** Go 1.25 (Gin Gonic, GORM), PostgreSQL 16
 - **Frontend:** Vue 3 (Composition API, Vite, PrimeVue, Tailwind CSS, Pinia)
 - **Arsitektur:** Decoupled Monorepo, RESTful API, JWT + RBAC
+
+---
+
+## Status: Pre-Deployment Ready
+
+Nexa telah menyelesaikan implementasi fitur deployment-readiness dengan fitur keamanan dan optimasi produksi berikut:
+
+### Security Hardening
+- Rate limiting (100 req/min per IP)
+- Security headers (CSP, X-Frame-Options, X-Content-Type-Options)
+- CORS configurable via environment
+- Secure cookies (HttpOnly, SameSite, Secure flag untuk production)
+- Input sanitization helpers
+
+### Frontend Optimization
+- Code-splitting dengan dynamic imports
+- Vendor chunk splitting untuk caching
+- Terser minification dengan drop_console/drop_debugger
+- Production nginx dengan gzip
+
+### Docker Production
+- Multi-stage builds (backend & frontend)
+- Healthchecks untuk semua service
+- Production-ready nginx config
+
+### New Features
+- Role CRUD endpoints untuk admin panel
+- Analytics export (CSV/JSON) untuk klaim
+
+Lihat [`DEPLOYMENT_READY.md`](DEPLOYMENT_READY.md) untuk detail lengkap implementasi dan [`DEPLOYMENT_CHECKLIST.md`](DEPLOYMENT_CHECKLIST.md) untuk checklist deployment.
 
 ---
 
@@ -56,6 +86,8 @@ JWT_SECRET=GANTI_DENGAN_HASIL_OPENSSL
 COOKIE_DOMAIN=localhost
 COOKIE_SECURE=false
 SERVER_PORT=:8080
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+RATE_LIMIT_ENABLED=true
 ```
 
 **Generate `JWT_SECRET`** (wajib, minimal 32 karakter):
@@ -285,6 +317,8 @@ JWT_SECRET="OUTPUT_DARI_OPENSSL"
 SERVER_PORT=":8080"
 COOKIE_DOMAIN="localhost"
 COOKIE_SECURE="false"
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+RATE_LIMIT_ENABLED=true
 ```
 
 Jalankan:
@@ -322,8 +356,10 @@ pkill -f "vite"
 - `.env` TIDAK di-commit (ada di `.gitignore`)
 - `.env.example` hanya template dengan placeholder
 - JWT secret harus random min 32 byte: `openssl rand -base64 32`
-- Cookie: `HttpOnly`, `SameSite=Lax`, `Secure=false` (local only)
+- Cookie: `HttpOnly`, `SameSite=Lax` (dev) / `SameSite=None` (prod), `Secure` configurable
 - bcrypt cost: 12
+- Rate limiting: 100 req/min per IP (configurable)
+- Security headers: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
 - **Akun demo di atas hanya untuk keperluan development/demo.** Untuk production, ganti seluruh password dan hapus seeder akun demo.
 
 ---
@@ -396,10 +432,12 @@ Status ditandai jujur: **[Ada]** = sudah terimplementasi di kode, **[Rencana]** 
 
 ## Keamanan
 
-- Autentikasi JWT via _HttpOnly_, _Secure_, _SameSite=Lax_ cookie
+- Autentikasi JWT via _HttpOnly_, _Secure_, _SameSite_ cookie
 - RBAC middleware + mitigasi IDOR/BOLA
 - _Soft delete_ + _ACID transaction_ PostgreSQL
 - Password bcrypt cost 12
+- Rate limiting (100 req/min per IP)
+- Security headers (CSP, X-Frame-Options, etc.)
 - `.env` tidak di-commit, `.env.example` hanya placeholder
 
 ## Target Keberhasilan

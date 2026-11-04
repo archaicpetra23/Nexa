@@ -1,9 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LandingView from '../views/LandingView.vue'
-import LoginView from '../views/LoginView.vue'
-import DashboardView from '../views/DashboardView.vue'
-import AdminView from '../views/AdminView.vue'
 import { useAuthStore } from '../stores/auth'
+
+const LandingView = () => import('@/views/LandingView.vue')
+const LoginView = () => import('@/views/LoginView.vue')
+const DashboardView = () => import('@/views/DashboardView.vue')
+const AdminView = () => import('@/views/AdminView.vue')
+const PasienView = () => import('@/views/PasienView.vue')
+const RekamMedisView = () => import('@/views/RekamMedisView.vue')
+const KlaimView = () => import('@/views/KlaimView.vue')
+const MasterICDView = () => import('@/views/MasterICDView.vue')
 
 const routes = [
   {
@@ -31,25 +36,25 @@ const routes = [
   {
     path: '/pasien',
     name: 'pasien',
-    component: () => import('../views/PasienView.vue'),
+    component: PasienView,
     meta: { requiresAuth: true }
   },
   {
     path: '/rekam-medis',
     name: 'rekam-medis',
-    component: () => import('../views/RekamMedisView.vue'),
+    component: RekamMedisView,
     meta: { requiresAuth: true }
   },
   {
     path: '/klaim',
     name: 'klaim',
-    component: () => import('../views/KlaimView.vue'),
+    component: KlaimView,
     meta: { requiresAuth: true }
   },
   {
     path: '/master-icd',
     name: 'master-icd',
-    component: () => import('../views/MasterICDView.vue'),
+    component: MasterICDView,
     meta: { requiresAuth: true }
   }
 ]

@@ -8,11 +8,13 @@ import (
 )
 
 type Config struct {
-	DBDSN        string
-	JWTSecret    string
-	Port         string
-	CookieDomain string
-	CookieSecure bool
+	DBDSN              string
+	JWTSecret          string
+	Port               string
+	CookieDomain       string
+	CookieSecure       bool
+	CORSAllowedOrigins string
+	RateLimitEnabled   bool
 }
 
 func Load() *Config {
@@ -41,10 +43,12 @@ func Load() *Config {
 	}
 
 	return &Config{
-		DBDSN:        dsn,
-		JWTSecret:    secret,
-		Port:         port,
-		CookieDomain: viper.GetString("COOKIE_DOMAIN"),
-		CookieSecure: viper.GetBool("COOKIE_SECURE"),
+		DBDSN:              dsn,
+		JWTSecret:          secret,
+		Port:               port,
+		CookieDomain:       viper.GetString("COOKIE_DOMAIN"),
+		CookieSecure:       viper.GetBool("COOKIE_SECURE"),
+		CORSAllowedOrigins: viper.GetString("CORS_ALLOWED_ORIGINS"),
+		RateLimitEnabled:   viper.GetBool("RATE_LIMIT_ENABLED"),
 	}
 }

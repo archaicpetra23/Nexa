@@ -533,15 +533,16 @@ fetchRekam()
 .page-kicker {
   display: block;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1.25px;
+  text-transform: uppercase;
 }
 
 .page-header h1 {
   margin: 8px 0 5px;
   color: var(--color-primary-dark);
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   letter-spacing: -0.7px;
 }
@@ -549,7 +550,7 @@ fetchRekam()
 .page-header p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .filter-bar {
@@ -558,7 +559,7 @@ fetchRekam()
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: white;
 }
 
@@ -571,7 +572,7 @@ fetchRekam()
   gap: 10px;
   padding: 0 12px;
   border: 1px solid #dfe3e6;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: #fbfcfc;
   color: #7b8790;
 }
@@ -602,7 +603,7 @@ fetchRekam()
   color: white;
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   transition: background-color 140ms ease;
@@ -634,11 +635,11 @@ fetchRekam()
 .form-tabs button {
   padding: 6px 12px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
   transition: background-color 140ms ease, color 140ms ease;
 }
@@ -679,7 +680,7 @@ fetchRekam()
 
 .field-error {
   color: #B54245;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .empty-state {
@@ -723,7 +724,7 @@ fetchRekam()
 .icd-item .tarif {
   flex: 0 0 auto;
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .secondary-button {
@@ -733,12 +734,12 @@ fetchRekam()
   gap: 6px;
   padding: 0 12px;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: white;
   color: var(--color-primary);
   cursor: pointer;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   transition: background-color 140ms ease;
 }
@@ -761,7 +762,7 @@ fetchRekam()
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid #dce6eb;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #f8fafc;
 }
 

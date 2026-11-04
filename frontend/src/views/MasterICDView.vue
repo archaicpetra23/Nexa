@@ -564,15 +564,16 @@ fetchICD10()
 .page-kicker {
   display: block;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 1.25px;
+  text-transform: uppercase;
 }
 
 .page-header h1 {
   margin: 8px 0 5px;
   color: var(--color-primary-dark);
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   letter-spacing: -0.7px;
 }
@@ -580,14 +581,14 @@ fetchICD10()
 .page-header p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .tabs-container {
   overflow-x: auto;
   padding: 5px;
   border: 1px solid var(--color-border);
-  border-radius: 11px;
+  border-radius: var(--radius-lg);
   background: #eeede9;
 }
 
@@ -668,10 +669,10 @@ fetchICD10()
   display: inline-block;
   padding: 4px 9px;
   border: 1px solid #dce4ea;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: #f5f8fa;
   color: var(--color-primary-dark);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 
@@ -702,7 +703,7 @@ fetchICD10()
 
 .field-error {
   color: #B54245;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 @keyframes tab-fade-in {

@@ -580,8 +580,11 @@ onMounted(() => {
 
 .chart-container {
   position: relative;
-  height: 240px;
+  height: 320px;
   padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chart-empty {

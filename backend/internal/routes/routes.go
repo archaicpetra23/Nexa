@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	delivery "nexa/backend/internal/delivery/http"
+	"nexa/backend/internal/config"
 	"nexa/backend/internal/handlers"
 	"nexa/backend/internal/middleware"
 	"nexa/backend/internal/repository"
@@ -13,10 +14,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func Setup(r *gin.Engine, db *gorm.DB, jwtSecret string) {
-	r.Use(middleware.CORSMiddleware())
+func Setup(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
+	r.Use(middleware.CORSMiddleware(cfg.CORSAllowedOrigins))
+	if cfg.RateLimitEnabled {
+		r.Use(middleware.RateLimitMiddleware())
+	}
+	r.Use(middleware.SecurityHeadersMiddleware())
 
-	authHandler := &handlers.AuthHandler{DB: db, JWTSecret: jwtSecret}
+	authHandler := &handlers.AuthHandler{DB: db, JWTSecret: cfg.JWTSecret, CookieSecure: cfg.CookieSecure}
 
 	pasienRepo := repository.NewPasienRepository(db)
 	pasienUC := usecase.NewPasienUsecase(pasienRepo)
@@ -33,6 +38,7 @@ func Setup(r *gin.Engine, db *gorm.DB, jwtSecret string) {
 	adminHandler := delivery.NewAdminHandler(db)
 	adminUserHandler := delivery.NewAdminUserHandler(db)
 	masterHandler := delivery.NewMasterHandler(db)
+	analyticsHandler := delivery.NewAnalyticsHandler(db)
 
 	api := r.Group("/api/v1")
 	{
@@ -41,10 +47,10 @@ func Setup(r *gin.Engine, db *gorm.DB, jwtSecret string) {
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.Refresh)
 			auth.POST("/logout", authHandler.Logout)
-			auth.GET("/me", middleware.AuthMiddleware(jwtSecret), authHandler.Me)
+			auth.GET("/me", middleware.AuthMiddleware(cfg.JWTSecret), authHandler.Me)
 		}
 
-		authMw := middleware.AuthMiddleware(jwtSecret)
+		authMw := middleware.AuthMiddleware(cfg.JWTSecret)
 
 		pasien := api.Group("/pasien", authMw)
 		{
@@ -105,8 +111,11 @@ func Setup(r *gin.Engine, db *gorm.DB, jwtSecret string) {
 			master.POST("/cbgs", middleware.RBACMiddleware("admin_ti"), masterHandler.CreateCBGS)
 			master.PUT("/cbgs/:kode", middleware.RBACMiddleware("admin_ti"), masterHandler.UpdateCBGS)
 			master.DELETE("/cbgs/:kode", middleware.RBACMiddleware("admin_ti"), masterHandler.DeleteCBGS)
-			// Existing (keep for backward compatibility)
+			// Roles and Units
 			master.GET("/roles", masterHandler.GetRoles)
+			master.POST("/roles", middleware.RBACMiddleware("admin_ti"), masterHandler.CreateRole)
+			master.PUT("/roles/:id", middleware.RBACMiddleware("admin_ti"), masterHandler.UpdateRole)
+			master.DELETE("/roles/:id", middleware.RBACMiddleware("admin_ti"), masterHandler.DeleteRole)
 			master.GET("/units", masterHandler.GetUnits)
 			master.POST("/units", middleware.RBACMiddleware("admin_ti"), masterHandler.CreateUnit)
 			master.PUT("/units/:id", middleware.RBACMiddleware("admin_ti"), masterHandler.UpdateUnit)
@@ -120,6 +129,9 @@ func Setup(r *gin.Engine, db *gorm.DB, jwtSecret string) {
 		// Dashboard
 		dashboardHandler := delivery.NewDashboardHandler(db)
 		api.GET("/dashboard/stats", authMw, dashboardHandler.GetStats)
+
+		// Analytics export
+		api.GET("/analytics/export-klaim", authMw, middleware.RBACMiddleware("admin_ti", "petugas_casemix"), analyticsHandler.ExportKlaim)
 	}
 
 	r.GET("/health", func(c *gin.Context) {

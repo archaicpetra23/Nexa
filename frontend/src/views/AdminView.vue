@@ -1011,9 +1011,10 @@ function formatRoleName(role) {
   gap: 8px;
   margin-bottom: 8px;
   color: #c6d8e5;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .admin-eyebrow i {
@@ -1032,7 +1033,7 @@ function formatRoleName(role) {
 .admin-hero p {
   margin: 8px 0 0;
   color: #d2dee8;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .admin-primary-action,
@@ -1043,10 +1044,10 @@ function formatRoleName(role) {
   justify-content: center;
   gap: 9px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
   white-space: nowrap;
@@ -1080,7 +1081,7 @@ function formatRoleName(role) {
   overflow-x: auto;
   padding: 5px;
   border: 1px solid var(--color-border);
-  border-radius: 11px;
+  border-radius: var(--radius-lg);
   background: #eeede9;
 }
 
@@ -1094,12 +1095,12 @@ function formatRoleName(role) {
   min-height: 39px;
   padding: 0 16px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
 }
@@ -1139,7 +1140,7 @@ function formatRoleName(role) {
 .admin-section-heading h2 {
   margin: 0;
   color: var(--color-text-primary);
-  font-size: 19px;
+  font-size: var(--text-lg);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -1147,7 +1148,7 @@ function formatRoleName(role) {
 .admin-section-heading p {
   margin: 4px 0 0;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .admin-count {
@@ -1157,10 +1158,10 @@ function formatRoleName(role) {
   gap: 7px;
   padding: 0 10px;
   border: 1px solid var(--color-border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: white;
   color: #536474;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1190,7 +1191,7 @@ function formatRoleName(role) {
   gap: 9px;
   padding: 0 11px;
   border: 1px solid #dfe3e6;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: #fbfcfc;
   color: #7b8790;
 }
@@ -1217,7 +1218,7 @@ function formatRoleName(role) {
   gap: 9px;
   padding: 0 10px;
   border: 1px solid #dfe3e6;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: #fbfcfc;
   color: #71808a;
   transition: border-color 140ms ease, box-shadow 140ms ease;
@@ -1230,7 +1231,7 @@ function formatRoleName(role) {
 
 .admin-select-filter > i {
   flex: 0 0 auto;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .admin-select-filter .admin-filter-select {
@@ -1245,7 +1246,7 @@ function formatRoleName(role) {
   background: transparent;
   box-shadow: none;
   color: #344653;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .admin-select-filter :deep(.p-select-label) {
@@ -1271,7 +1272,7 @@ function formatRoleName(role) {
 .admin-filter-bar :deep(.admin-date-filter.p-datepicker) {
   overflow: hidden;
   border: 1px solid #dfe3e6;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: #fbfcfc;
   transition: border-color 140ms ease, box-shadow 140ms ease;
 }
@@ -1289,7 +1290,7 @@ function formatRoleName(role) {
   background: #fbfcfc;
   box-shadow: none;
   color: #344653;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .admin-filter-bar :deep(.admin-date-filter .p-datepicker-dropdown) {
@@ -1314,10 +1315,10 @@ function formatRoleName(role) {
   margin: 0;
   padding: 11px 13px;
   border: 1px solid #dce6ec;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: #f5f9fb;
   color: #526777;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .admin-info-note i {
@@ -1327,10 +1328,10 @@ function formatRoleName(role) {
 .admin-role-select :deep(.p-select) {
   min-height: 34px;
   border-color: #dce4e8;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: #fff;
   color: #344653;
-  font-size: 12px;
+  font-size: var(--text-xs);
   transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
@@ -1402,7 +1403,7 @@ function formatRoleName(role) {
     min-height: 36px;
     gap: 6px;
     padding: 0 9px;
-    font-size: 10px;
+    font-size: var(--text-2xs);
   }
 
   .admin-section-heading {
@@ -1416,12 +1417,12 @@ function formatRoleName(role) {
 
   .admin-section-heading p {
     max-width: 30ch;
-    font-size: 10px;
+    font-size: var(--text-2xs);
   }
 
   .admin-count {
     margin-top: 2px;
-    font-size: 10px;
+    font-size: var(--text-2xs);
   }
 
   .admin-filter-bar > * {

@@ -21,6 +21,16 @@ func NewMasterHandler(db *gorm.DB) *MasterHandler {
 	return &MasterHandler{db: db, repo: repository.NewMasterRepository(db)}
 }
 
+type CreateRoleRequest struct {
+	NamaRole  string `json:"nama_role" binding:"required"`
+	Deskripsi string `json:"deskripsi"`
+}
+
+type UpdateRoleRequest struct {
+	NamaRole  string `json:"nama_role" binding:"required"`
+	Deskripsi string `json:"deskripsi"`
+}
+
 type CreateUnitRequest struct {
 	NamaUnit string `json:"nama_unit" binding:"required"`
 }
@@ -78,6 +88,165 @@ func (h *MasterHandler) GetRoles(c *gin.Context) {
 		"success": true,
 		"message": "Daftar role berhasil dimuat",
 		"data":    roles,
+	})
+}
+
+// CreateRole handles POST /api/v1/master/roles
+func (h *MasterHandler) CreateRole(c *gin.Context) {
+	userID := c.GetUint("user_id")
+
+	var req CreateRoleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Nama role wajib diisi",
+			"data":    nil,
+		})
+		return
+	}
+
+	// Check unique
+	var existing models.Role
+	if err := h.db.Where("nama_role = ?", req.NamaRole).First(&existing).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{
+			"success": false,
+			"message": "Nama role sudah digunakan",
+			"data":    nil,
+		})
+		return
+	}
+
+	role := &models.Role{
+		NamaRole:  req.NamaRole,
+		Deskripsi: req.Deskripsi,
+	}
+
+	if err := h.db.Create(role).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Gagal membuat role",
+			"data":    nil,
+		})
+		return
+	}
+
+	// Log activity
+	h.logActivity(userID, "roles", "INSERT", &role.IDRole)
+
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+		"message": "Role berhasil dibuat",
+		"data":    role,
+	})
+}
+
+// UpdateRole handles PUT /api/v1/master/roles/:id
+func (h *MasterHandler) UpdateRole(c *gin.Context) {
+	userID := c.GetUint("user_id")
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "ID role tidak valid",
+			"data":    nil,
+		})
+		return
+	}
+
+	var req UpdateRoleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "Nama role wajib diisi",
+			"data":    nil,
+		})
+		return
+	}
+
+	var role models.Role
+	if err := h.db.First(&role, uint(id)).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"message": "Role tidak ditemukan",
+			"data":    nil,
+		})
+		return
+	}
+
+	// Check unique
+	var existing models.Role
+	if err := h.db.Where("nama_role = ? AND id_role != ?", req.NamaRole, id).First(&existing).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{
+			"success": false,
+			"message": "Nama role sudah digunakan",
+			"data":    nil,
+		})
+		return
+	}
+
+	role.NamaRole = req.NamaRole
+	role.Deskripsi = req.Deskripsi
+	if err := h.db.Save(&role).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Gagal memperbarui role",
+			"data":    nil,
+		})
+		return
+	}
+
+	// Log activity
+	h.logActivity(userID, "roles", "UPDATE", &role.IDRole)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Role berhasil diperbarui",
+		"data":    role,
+	})
+}
+
+// DeleteRole handles DELETE /api/v1/master/roles/:id
+func (h *MasterHandler) DeleteRole(c *gin.Context) {
+	userID := c.GetUint("user_id")
+
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"message": "ID role tidak valid",
+			"data":    nil,
+		})
+		return
+	}
+
+	var role models.Role
+	if err := h.db.First(&role, uint(id)).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"message": "Role tidak ditemukan",
+			"data":    nil,
+		})
+		return
+	}
+
+	// Hard delete for master data (roles)
+	if err := h.db.Delete(&role).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Gagal menghapus role",
+			"data":    nil,
+		})
+		return
+	}
+
+	// Log activity
+	h.logActivity(userID, "roles", "DELETE", &role.IDRole)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Role berhasil dihapus",
+		"data":    nil,
 	})
 }
 
