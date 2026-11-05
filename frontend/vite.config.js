@@ -1,20 +1,28 @@
+import path from 'path'
+
 import { defineConfig, splitVendorChunkPlugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [vue(), splitVendorChunkPlugin()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  },
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 5174,
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://backend:8080',
+        target: 'http://localhost:8080',
         changeOrigin: true,
       },
     },
   },
   build: {
+    outDir: '../dist-frontend',
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -35,5 +43,5 @@ export default defineConfig({
         },
       },
     },
-  },
+  }
 })

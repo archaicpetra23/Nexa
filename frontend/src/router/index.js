@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
-const LandingView = () => import('@/views/LandingView.vue')
-const LoginView = () => import('@/views/LoginView.vue')
-const DashboardView = () => import('@/views/DashboardView.vue')
-const AdminView = () => import('@/views/AdminView.vue')
-const PasienView = () => import('@/views/PasienView.vue')
-const RekamMedisView = () => import('@/views/RekamMedisView.vue')
-const KlaimView = () => import('@/views/KlaimView.vue')
-const MasterICDView = () => import('@/views/MasterICDView.vue')
+const LandingView = () => import('../views/LandingView.vue')
+const LoginView = () => import('../views/LoginView.vue')
+const DashboardView = () => import('../views/DashboardView.vue')
+const AdminView = () => import('../views/AdminView.vue')
+const PasienView = () => import('../views/PasienView.vue')
+const RekamMedisView = () => import('../views/RekamMedisView.vue')
+const KlaimView = () => import('../views/KlaimView.vue')
+const MasterICDView = () => import('../views/MasterICDView.vue')
 
 const routes = [
   {
