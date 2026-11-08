@@ -72,6 +72,11 @@ func (uc *klaimUsecase) UpdateStatusKlaim(id uint, status string, alasan *string
 		return err
 	}
 
+	// Validate transition
+	if err := validateKlaimStatusTransition(klaim.StatusKlaim, status); err != nil {
+		return err
+	}
+
 	klaim.StatusKlaim = status
 	klaim.AlasanPendingTolak = alasan
 	klaim.UpdatedAt = time.Now()
@@ -111,6 +116,26 @@ func validateKlaimStatus(status string, alasan *string) error {
 
 	if (status == "pending" || status == "ditolak") && (alasan == nil || *alasan == "") {
 		return ErrKlaimAlasanRequired
+	}
+
+	return nil
+}
+
+func validateKlaimStatusTransition(fromStatus, toStatus string) error {
+	// Define valid transitions
+	validTransitions := map[string]map[string]bool{
+		"draft":     {"pending": true, "ditolak": true},
+		"pending":   {"disetujui": true, "ditolak": true, "draft": true},
+		"disetujui": {}, // terminal state
+		"ditolak":   {}, // terminal state
+	}
+
+	if _, ok := validTransitions[fromStatus]; !ok {
+		return ErrKlaimInvalidStatus
+	}
+
+	if !validTransitions[fromStatus][toStatus] {
+		return ErrKlaimInvalidStatus
 	}
 
 	return nil

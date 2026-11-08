@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500" xmlns:c2pa="http://c2pa.org/manifest">
+  <title>Nexa logo icon</title>
+  <rect width="500" height="500" rx="112" fill="#0F2740"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="36" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M102 198 V102 L198 198 V102"/>
+    <path d="M302 302 L398 398 M398 302 L302 398"/>
+  </g>
+  <path d="M316 84 H372 L402 114 V198 Q402 216 384 216 H316 Q298 216 298 198 V102 Q298 84 316 84 Z" fill="#FFFFFF"/>
+  <path d="M372 84 V114 H402 Z" fill="#E5E2DB"/>
+  <path d="M322 146 H378 M322 170 H378 M322 194 H354" fill="none" stroke="#0F2740" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="150" cy="350" r="64" fill="#FFFFFF"/>
+  <path d="M121 353 L142 374 L181 328" fill="none" stroke="#0F2740" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

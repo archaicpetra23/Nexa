@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../dist-frontend',
+    outDir: 'dist',
     minify: 'terser',
     terserOptions: {
       compress: {

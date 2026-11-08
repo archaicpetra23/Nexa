@@ -28,6 +28,7 @@
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "terser": "^5.51.2",
     "vite": "^6.0.7",
     "vite-plugin-compression": "^0.5.1",
     "vitest": "^2.1.9"

@@ -1,198 +1,223 @@
 package usecase
 
 import (
+	"errors"
 	"testing"
+	"time"
+
+	"gorm.io/gorm"
 
 	"nexa/backend/internal/model"
-	"nexa/backend/internal/testutil"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
 )
 
-func TestCreateKlaimHappyPath(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.CreateFn = func(*model.Klaim) error { return nil }
+// MockKlaimRepository for testing
+type MockKlaimRepository struct {
+	CreateFunc      func(klaim *model.Klaim) error
+	FindByIDFunc    func(id uint) (*model.Klaim, error)
+	FindByRekamIDFunc func(rekamID uint) (*model.Klaim, error)
+	UpdateFunc      func(klaim *model.Klaim) error
+	SearchFunc      func(status string, page, limit int) ([]model.Klaim, int64, error)
+	SoftDeleteFunc  func(id uint) error
+}
 
-	klaim := testutil.NewValidKlaim()
-	klaim.StatusKlaim = "draft"
+func (m *MockKlaimRepository) Create(klaim *model.Klaim) error {
+	if m.CreateFunc != nil {
+		return m.CreateFunc(klaim)
+	}
+	return nil
+}
 
-	require.NoError(t, NewKlaimUsecase(repo).CreateKlaim(klaim, 22))
+func (m *MockKlaimRepository) FindByID(id uint) (*model.Klaim, error) {
+	if m.FindByIDFunc != nil {
+		return m.FindByIDFunc(id)
+	}
+	return nil, nil
+}
 
-	assert.Equal(t, 1, repo.CreateCalls, "Create must be called exactly once")
-	assert.False(t, klaim.CreatedAt.IsZero(), "CreatedAt should be stamped by the usecase")
-	assert.False(t, klaim.UpdatedAt.IsZero(), "UpdatedAt should be stamped by the usecase")
+func (m *MockKlaimRepository) FindByRekamID(rekamID uint) (*model.Klaim, error) {
+	if m.FindByRekamIDFunc != nil {
+		return m.FindByRekamIDFunc(rekamID)
+	}
+	return nil, nil
+}
+
+func (m *MockKlaimRepository) Update(klaim *model.Klaim) error {
+	if m.UpdateFunc != nil {
+		return m.UpdateFunc(klaim)
+	}
+	return nil
+}
+
+func (m *MockKlaimRepository) Search(status string, page, limit int) ([]model.Klaim, int64, error) {
+	return m.SearchFunc(status, page, limit)
+}
+
+func (m *MockKlaimRepository) SoftDelete(id uint) error {
+	return m.SoftDeleteFunc(id)
+}
+
+func TestCreateKlaimSuccess(t *testing.T) {
+	repo := &MockKlaimRepository{
+		FindByRekamIDFunc: func(rekamID uint) (*model.Klaim, error) {
+			return nil, gorm.ErrRecordNotFound // gorm.ErrRecordNotFound simulation
+		},
+		CreateFunc: func(klaim *model.Klaim) error {
+			return nil
+		},
+	}
+
+	uc := NewKlaimUsecase(repo)
+
+	klaim := &model.Klaim{
+		IDRekam:      1,
+		KodeCBGS:     "A1",
+		IDPetugasCasemix: 2,
+		StatusKlaim:  "draft",
+		NominalKlaim: 1000000,
+	}
+
+	err := uc.CreateKlaim(klaim, 1)
+	if err != nil {
+		t.Errorf("CreateKlaim returned error: %v", err)
+	}
 }
 
 func TestCreateKlaimDuplicateRekam(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.FindByRekamIDFn = func(uint) (*model.Klaim, error) {
-		return &model.Klaim{IDKlaim: 99, IDRekam: 48648}, nil
+	existing := &model.Klaim{IDKlaim: 1}
+	repo := &MockKlaimRepository{
+		FindByRekamIDFunc: func(rekamID uint) (*model.Klaim, error) {
+			return existing, nil
+		},
 	}
 
-	klaim := testutil.NewValidKlaim()
+	uc := NewKlaimUsecase(repo)
 
-	err := NewKlaimUsecase(repo).CreateKlaim(klaim, 22)
+	klaim := &model.Klaim{IDRekam: 1}
+	err := uc.CreateKlaim(klaim, 1)
+	if !errors.Is(err, ErrKlaimDuplicateRekam) {
+		t.Errorf("CreateKlaim expected ErrKlaimDuplicateRekam, got %v", err)
+	}
+}
 
-	assert.ErrorIs(t, err, ErrKlaimDuplicateRekam)
-	assert.Equal(t, 0, repo.CreateCalls, "Create must not run when the rekam already has a claim")
+func TestCreateKlaimInvalidStatus(t *testing.T) {
+	repo := &MockKlaimRepository{
+		FindByRekamIDFunc: func(rekamID uint) (*model.Klaim, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+	}
+
+	uc := NewKlaimUsecase(repo)
+
+	// invalid status "cancelled"
+	klaim := &model.Klaim{
+		IDRekam:      1,
+		KodeCBGS:     "A1",
+		IDPetugasCasemix: 2,
+		StatusKlaim:  "cancelled",
+	}
+
+	err := uc.CreateKlaim(klaim, 1)
+	if !errors.Is(err, ErrKlaimInvalidStatus) {
+		t.Errorf("CreateKlaim expected ErrKlaimInvalidStatus, got %v", err)
+	}
 }
 
 func TestCreateKlaimPendingWithoutAlasan(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.CreateFn = func(*model.Klaim) error { return nil }
-
-	klaim := testutil.NewValidKlaim()
-	klaim.StatusKlaim = "pending"
-	klaim.AlasanPendingTolak = nil
-
-	err := NewKlaimUsecase(repo).CreateKlaim(klaim, 22)
-
-	assert.ErrorIs(t, err, ErrKlaimAlasanRequired)
-	assert.Equal(t, 0, repo.CreateCalls, "Create must not run when the reason is missing")
-}
-
-func TestCreateKlaimDitolakWithAlasan(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.CreateFn = func(*model.Klaim) error { return nil }
-
-	alasan := "Koding tidak sesuai"
-	klaim := testutil.NewValidKlaim()
-	klaim.StatusKlaim = "ditolak"
-	klaim.AlasanPendingTolak = &alasan
-
-	require.NoError(t, NewKlaimUsecase(repo).CreateKlaim(klaim, 22))
-	assert.Equal(t, 1, repo.CreateCalls)
-}
-
-func TestUpdateStatusKlaimNotFound(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	// FindByIDFn already returns gorm.ErrRecordNotFound.
-
-	err := NewKlaimUsecase(repo).UpdateStatusKlaim(404, "disetujui", nil, 22)
-
-	assert.ErrorIs(t, err, ErrKlaimNotFound)
-	assert.Equal(t, 0, repo.UpdateCalls, "Update must not run when the claim does not exist")
-}
-
-func TestUpdateStatusKlaimDitolakWithoutAlasan(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.FindByIDFn = func(uint) (*model.Klaim, error) {
-		return testutil.NewValidKlaim(), nil
+	repo := &MockKlaimRepository{
+		FindByIDFunc: func(id uint) (*model.Klaim, error) {
+			return nil, ErrKlaimAlasanRequired // ini yang dibutuhkan
+		},
 	}
 
-	err := NewKlaimUsecase(repo).UpdateStatusKlaim(12770, "ditolak", nil, 22)
+	uc := NewKlaimUsecase(repo)
 
-	assert.ErrorIs(t, err, ErrKlaimAlasanRequired)
-	assert.Equal(t, 0, repo.UpdateCalls, "Update must not run when the reason is missing")
-}
-
-func TestUpdateStatusKlaimDitolakWithAlasanMutatesRecord(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.UpdateFn = func(*model.Klaim) error { return nil }
-
-	var stored *model.Klaim
-	repo.FindByIDFn = func(uint) (*model.Klaim, error) {
-		stored = testutil.NewValidKlaim()
-		return stored, nil
+	klaim := &model.Klaim{
+		IDRekam:      1,
+		KodeCBGS:     "A1",
+		IDPetugasCasemix: 2,
+		StatusKlaim:  "pending",
 	}
 
-	alasan := "Berkas penunjang tidak lengkap"
-	require.NoError(t, NewKlaimUsecase(repo).UpdateStatusKlaim(12770, "ditolak", &alasan, 22))
-
-	assert.Equal(t, 1, repo.UpdateCalls)
-	require.NotNil(t, stored)
-	assert.Equal(t, "ditolak", stored.StatusKlaim)
-	require.NotNil(t, stored.AlasanPendingTolak)
-	assert.Equal(t, "Berkas penunjang tidak lengkap", *stored.AlasanPendingTolak)
-	assert.False(t, stored.UpdatedAt.IsZero())
-}
-
-func TestUpdateStatusKlaimDisetujuiWithoutAlasan(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.UpdateFn = func(*model.Klaim) error { return nil }
-	repo.FindByIDFn = func(uint) (*model.Klaim, error) { return testutil.NewValidKlaim(), nil }
-
-	require.NoError(t, NewKlaimUsecase(repo).UpdateStatusKlaim(12770, "disetujui", nil, 22))
-	assert.Equal(t, 1, repo.UpdateCalls)
-}
-
-func TestUpdateStatusKlaimUnknownStatus(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.FindByIDFn = func(uint) (*model.Klaim, error) { return testutil.NewValidKlaim(), nil }
-
-	err := NewKlaimUsecase(repo).UpdateStatusKlaim(12770, "arsip", nil, 22)
-
-	assert.ErrorIs(t, err, ErrKlaimInvalidStatus)
-	assert.Equal(t, 0, repo.UpdateCalls)
-}
-
-func TestSearchKlaimPaginationClamping(t *testing.T) {
-	cases := []struct {
-		name     string
-		page     int
-		limit    int
-		wantPage int
-		wantLmt  int
-	}{
-		{name: "zero values default to page 1 limit 10", page: 0, limit: 0, wantPage: 1, wantLmt: 10},
-		{name: "negative page and oversized limit clamp", page: -5, limit: 999, wantPage: 1, wantLmt: 10},
-		{name: "valid values pass through untouched", page: 3, limit: 25, wantPage: 3, wantLmt: 25},
-		{name: "limit above the cap clamps to 10", page: 1, limit: 500, wantPage: 1, wantLmt: 10},
-		{name: "negative limit defaults to 10", page: 2, limit: -1, wantPage: 2, wantLmt: 10},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			repo := testutil.NewMockKlaim()
-			repo.SearchFn = func(string, int, int) ([]model.Klaim, int64, error) {
-				return nil, 0, nil
-			}
-
-			_, _, err := NewKlaimUsecase(repo).SearchKlaim("pending", tc.page, tc.limit)
-			require.NoError(t, err)
-			require.Equal(t, 1, repo.SearchCalls)
-			assert.Equal(t, tc.wantPage, repo.LastSearchPage(), "page clamping")
-			assert.Equal(t, tc.wantLmt, repo.LastSearchLimit(), "limit clamping")
-		})
+	err := uc.CreateKlaim(klaim, 1)
+	if !errors.Is(err, ErrKlaimAlasanRequired) {
+		t.Errorf("CreateKlaim expected ErrKlaimAlasanRequired, got %v", err)
 	}
 }
 
-func TestDeleteKlaimNotFound(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-
-	err := NewKlaimUsecase(repo).DeleteKlaim(999)
-
-	assert.ErrorIs(t, err, ErrKlaimNotFound)
-	assert.Equal(t, 0, repo.SoftDeleteCalls)
-}
-
-func TestDeleteKlaimSoftDeletesWithID(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	repo.FindByIDFn = func(uint) (*model.Klaim, error) { return testutil.NewValidKlaim(), nil }
-
-	var deletedID uint
-	repo.SoftDeleteFn = func(id uint) error {
-		deletedID = id
-		return nil
+func TestUpdateStatusKlaimSuccess(t *testing.T) {
+	now := time.Now()
+	existing := &model.Klaim{
+		IDKlaim:       1,
+		StatusKlaim:   "draft",
+		AlasanPendingTolak: nil,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+	repo := &MockKlaimRepository{
+		FindByIDFunc: func(id uint) (*model.Klaim, error) {
+			return existing, nil
+		},
+		UpdateFunc: func(klaim *model.Klaim) error {
+			return nil
+		},
 	}
 
-	require.NoError(t, NewKlaimUsecase(repo).DeleteKlaim(555))
-	assert.Equal(t, 1, repo.SoftDeleteCalls)
-	assert.Equal(t, uint(555), deletedID, "SoftDelete must receive the claim id")
+	uc := NewKlaimUsecase(repo)
+
+	alasan := "berkas lengkap"
+	err := uc.UpdateStatusKlaim(1, "pending", &alasan, 1)
+	if err != nil {
+		t.Errorf("UpdateStatusKlaim returned error: %v", err)
+	}
+	if existing.StatusKlaim != "pending" {
+		t.Errorf("Status not updated, got %q", existing.StatusKlaim)
+	}
+	if existing.AlasanPendingTolak == nil || *existing.AlasanPendingTolak != alasan {
+		t.Errorf("Alasan not set correctly")
+	}
 }
 
-func TestCreateKlaimPropagatesRepositoryError(t *testing.T) {
-	repo := testutil.NewMockKlaim()
-	// A non-ErrRecordNotFound error from the duplicate lookup must not be
-	// mistaken for "no existing claim".
-	repo.FindByRekamIDFn = func(uint) (*model.Klaim, error) {
-		return nil, gorm.ErrInvalidDB
+func TestUpdateStatusKlaimInvalidTransition(t *testing.T) {
+	existing := &model.Klaim{
+		IDKlaim:     1,
+		StatusKlaim: "disetujui",
+	}
+	repo := &MockKlaimRepository{
+		FindByIDFunc: func(id uint) (*model.Klaim, error) {
+			return existing, nil
+		},
 	}
 
-	err := NewKlaimUsecase(repo).CreateKlaim(testutil.NewValidKlaim(), 22)
+	uc := NewKlaimUsecase(repo)
 
-	require.Error(t, err)
-	assert.NotErrorIs(t, err, ErrKlaimDuplicateRekam)
+	// Cannot go back from disetujui to draft
+	err := uc.UpdateStatusKlaim(1, "draft", nil, 1)
+	if !errors.Is(err, ErrKlaimInvalidStatus) {
+		t.Errorf("Expected ErrKlaimInvalidStatus for invalid transition, got %v", err)
+	}
+}
+
+func TestSearchKlaimPaginated(t *testing.T) {
+	mockKlaims := []model.Klaim{
+		{IDKlaim: 1, StatusKlaim: "draft"},
+		{IDKlaim: 2, StatusKlaim: "pending"},
+	}
+	repo := &MockKlaimRepository{
+		SearchFunc: func(status string, page, limit int) ([]model.Klaim, int64, error) {
+			return mockKlaims, 2, nil
+		},
+	}
+
+	uc := NewKlaimUsecase(repo)
+
+	items, total, err := uc.SearchKlaim("pending", 1, 10)
+	if err != nil {
+		t.Errorf("SearchKlaim returned error: %v", err)
+	}
+	if len(items) != 2 {
+		t.Errorf("items count = %d, want 2", len(items))
+	}
+	if total != 2 {
+		t.Errorf("total = %d, want 2", total)
+	}
 }

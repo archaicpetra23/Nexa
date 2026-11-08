@@ -43,3 +43,40 @@ export function transitionError(current, next, alasan = null) {
 
   return null
 }
+
+// validateKlaimForm validasi form klaim sebelum submit
+export function validateKlaimForm(form) {
+  const errors = {}
+
+  if (!form.id_rekam || String(form.id_rekam).trim() === '') {
+    errors.id_rekam = 'ID Rekam Medis wajib diisi'
+  }
+
+  if (!form.kode_cbg || String(form.kode_cbg).trim() === '') {
+    errors.kode_cbg = 'Kode CBGS wajib diisi'
+  }
+
+  if (!form.id_petugas_casemix || String(form.id_petugas_casemix).trim() === '') {
+    errors.id_petugas_casemix = 'Petugas Casemix wajib dipilih'
+  }
+
+  if (!form.status_klaim || String(form.status_klaim).trim() === '') {
+    errors.status_klaim = 'Status Klaim wajib dipilih'
+  }
+
+  if (form.nominal_klaim === undefined || form.nominal_klaim === null || String(form.nominal_klaim).trim() === '') {
+    errors.nominal_klaim = 'Nominal Klaim wajib diisi'
+  } else if (Number(form.nominal_klaim) < 0) {
+    errors.nominal_klaim = 'Nominal Klaim tidak boleh negatif'
+  }
+
+  const needsAlasan = form.status_klaim === 'pending' || form.status_klaim === 'ditolak'
+  if (needsAlasan && (!form.alasan_pending_tolak || String(form.alasan_pending_tolak).trim() === '')) {
+    errors.alasan_pending_tolak = 'Alasan wajib diisi saat status pending/ditolak'
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors
+  }
+}
