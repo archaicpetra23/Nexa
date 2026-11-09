@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
   server: {
@@ -13,6 +12,18 @@ export default defineConfig({
         secure: false,
         ws: true
       }
+    },
+    headers: {
+      'Content-Security-Policy': "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+        manualChunks: undefined
+      }
+    },
+    cssCodeSplit: false
   }
 })
